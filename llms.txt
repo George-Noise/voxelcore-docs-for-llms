@@ -1,0 +1,39 @@
+# VoxelCore Content Pack Guide
+
+> Machine-oriented documentation teaching LLMs how to author content packs for
+> the VoxelCore voxel engine (github.com/MihailRis/voxelcore): pack manifests,
+> folder layout, block/item JSON formats, textures, preload and config files,
+> with a step-by-step minimal pack walkthrough and annotated real-world
+> examples. Written in imperative DO/AVOID style with trust labels
+> (VERIFIED / DOC / OBSERVED). Scope: declarative content only — animations,
+> sounds, models, entities, projects and worldgen are stub-only.
+
+Start here for the reader contract, trust labels and usage patterns:
+
+- [README](README.md): how to feed this repo to chat LLMs and coding agents
+
+Core reference:
+
+- [01 Engine Overview](docs/01-engine-overview.md): terminology, namespaced IDs, ID rules, reserved names, how content loads
+- [02 Pack Structure](docs/02-pack-structure.md): package.json manifest, dependencies, content sources, folder layout, config TOML files, enabling packs
+- [03 Blocks Reference](docs/03-blocks.md): every documented block property, texture-faces face order, real annotated stock-pack examples
+- [04 Items Reference](docs/04-items.md): item properties, icons, generated block items, tags, script boundary
+- [05 Textures and Assets](docs/05-textures-and-assets.md): blocks/items atlases, icon.png, preload.json, block materials, localization
+- [08 Pitfalls and Checklist](docs/08-pitfalls.md): fatal mistakes, wrong assumptions, pre-flight checklist, debugging hints
+
+Applied:
+
+- [06 Walkthrough: Minimal Pack](docs/06-walkthrough.md): complete working pack built file by file (JSON only, no Lua)
+- [07 Example Repos Breakdown](docs/07-example-repos.md): annotated structure of wooden_meat_game and fork_of_kompot, what to copy from each
+
+Out-of-scope stubs (do not guess these topics — pointers to authoritative sources inside):
+
+- [TODO Animations](docs/stubs/TODO-animations.md)
+- [TODO Sounds](docs/stubs/TODO-sounds.md)
+- [TODO Models](docs/stubs/TODO-models.md)
+- [TODO Entities](docs/stubs/TODO-entities.md)
+- [TODO Projects and World Generators](docs/stubs/TODO-projects-worldgen.md)
+
+Full text for pasting into chats:
+
+- [llms-full.txt](llms-full.txt): all documents above concatenated in reading order

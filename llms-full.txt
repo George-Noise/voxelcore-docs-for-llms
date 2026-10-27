@@ -1,0 +1,1584 @@
+# VoxelCore Content Pack Guide — Full Text (llms-full.txt)
+
+> Concatenation of README.md and all docs of this repository, in
+> reading order. Section markers look like `<!-- ===== path ===== -->`.
+
+
+<!-- ===== README.md ===== -->
+
+# VoxelCore Content Pack Guide (for LLMs)
+
+Machine-oriented documentation teaching **LLMs how to author content packs for the
+[VoxelCore](https://github.com/MihailRis/voxelcore) voxel engine**.
+
+VoxelCore is an open-source voxel game engine (C++ core, Lua scripting, declarative
+JSON content). A *content pack* is a folder with a `package.json` manifest plus
+declarative JSON files that define blocks, items and other game content.
+
+Everything in this repository is written **for AI models, not humans**: imperative
+rules, exact file formats, copy-pasteable examples, and explicit trust labels.
+
+## How to use this repo with an LLM
+
+- **Chat models (DeepSeek, ChatGPT, Claude, ...)**: paste the whole `llms-full.txt`
+  into the conversation, or paste the individual `docs/*.md` files you need.
+- **Coding agents (with repo/file access)**: point the agent to this repository and
+  instruct it to read `llms.txt` first, then follow links it needs.
+- **Automated ingestion**: `llms.txt` follows the [llms.txt](https://llmstxt.org)
+  convention; `llms-full.txt` is the concatenated full text of all docs.
+
+## Reader contract (LLMs: follow literally)
+
+1. **Read `llms.txt` first.** It is the index. Pick only the sections you need.
+2. **Trust labels**. Facts are tagged so you know how reliable they are:
+   - `[VERIFIED]` — confirmed by official docs AND a real working pack.
+   - `[DOC]` — stated in official docs, not observed in example packs.
+   - `[OBSERVED]` — works in a real pack (engine's own pack or a published game),
+     but absent from official docs. Use carefully; semantics may change.
+   - Unlabeled statements are general context, not API contracts.
+3. **DO / AVOID**. Instructions marked `DO` are requirements. Instructions marked
+   `AVOID` describe failure modes that actually break packs. Do not "improve" them.
+4. **Never invent API fields.** If a property you need is not documented here, do
+   not guess its name or type. Check `docs/stubs/` — the topic may be intentionally
+   out of scope. If it is not covered anywhere, say "unknown" instead of guessing.
+5. **Scope is limited.** This guide covers pack basics, blocks, items, textures and
+   related config. Animations, sounds, models, entities and projects are NOT
+   covered (see `docs/stubs/`).
+
+## Scope
+
+| Covered                                  | Excluded (stub only)      |
+| ---------------------------------------- | ------------------------- |
+| Content pack structure, `package.json`   | Animations                |
+| Content sources, loading, dependencies   | Sounds & audio            |
+| Block definitions (JSON)                 | 3D models (VCM/OBJ)       |
+| Item definitions (JSON)                  | Entities & skeletons      |
+| Textures, atlases, icons, localization   | World generators          |
+| `preload.json`, `config/*.toml` basics   | XML UI layouts / Lua UI   |
+| End-to-end walkthrough of a minimal pack | Lua scripting API details |
+
+Lua scripting is mentioned only where pack files reference scripts. For the full
+Lua API read the engine's own docs: `doc/ru/scripting.md` and
+`doc/ru/scripting/` in the VoxelCore repository.
+
+## Document index
+
+| File                                            | Content                                                       |
+| ----------------------------------------------- | ------------------------------------------------------------- |
+| [docs/01-engine-overview.md](docs/01-engine-overview.md) | What VoxelCore is, terminology, ID rules, how content loads |
+| [docs/02-pack-structure.md](docs/02-pack-structure.md)   | `package.json`, folder layout, content sources, config files |
+| [docs/03-blocks.md](docs/03-blocks.md)                   | Block JSON reference with real annotated examples            |
+| [docs/04-items.md](docs/04-items.md)                     | Item JSON reference with real annotated examples             |
+| [docs/05-textures-and-assets.md](docs/05-textures-and-assets.md) | Texture atlases, icons, `preload.json`, materials, localization |
+| [docs/06-walkthrough.md](docs/06-walkthrough.md)         | Build a complete minimal pack step by step                   |
+| [docs/07-example-repos.md](docs/07-example-repos.md)     | Annotated breakdown of two real-world repositories           |
+| [docs/08-pitfalls.md](docs/08-pitfalls.md)               | Common mistakes and a pre-flight checklist                   |
+| [docs/stubs/](docs/stubs/)                               | TODO stubs for intentionally excluded topics                 |
+
+## Sources and reliability of this guide
+
+This guide was compiled from:
+
+1. Official VoxelCore documentation (`doc/ru/` — richer, and `doc/en/` — smaller).
+   Both are incomplete and contain errors; where they disagreed with reality,
+   real pack files were preferred.
+2. The engine's own stock pack `res/content/base/` (ground truth for file formats).
+3. A working game project:
+   [wooden_meat_game](https://github.com/George-Noise/wooden_meat_game)
+   (unfinished, but runs).
+4. A real UI-focused pack:
+   [fork_of_kompot](https://github.com/George-Noise/fork_of_kompot)
+   (fork of the Kompot declarative-UI pack; unfinished).
+
+The guide targets the current `main` branch of VoxelCore (engine ~0.32 era,
+October 2026 snapshot). It is **not version-pinned**: pack formats described here
+are the stable, documented subset; if the engine evolves, re-check the sources
+above.
+
+Anything you find in this guide marked `[OBSERVED]` but not documented upstream
+may change between engine versions without notice.
+
+
+<!-- ===== docs/01-engine-overview.md ===== -->
+
+# 01. Engine Overview
+
+Read this file first. It defines the terminology used by every other document.
+
+## What VoxelCore is
+
+VoxelCore (repo: <https://github.com/MihailRis/voxelcore>) is an open-source voxel
+game engine written in C++ with Lua scripting. It ships as an engine binary
+(`VoxelEngine` / `VoxelCore`) plus a built-in content pack `base` in `res/content/`.
+
+Game content is **declarative**: blocks, items and most other content are plain
+JSON files inside *content packs*. Lua scripts are optional and add behavior on
+top of JSON declarations. DO design content as JSON first; add Lua only when the
+JSON properties are not enough.
+
+## Core terminology
+
+| Term            | Meaning                                                                 |
+| --------------- | ----------------------------------------------------------------------- |
+| Content pack    | A folder containing `package.json` and optional content subfolders.     |
+| Pack ID         | The unique identifier declared in `package.json` (`"id"` field).        |
+| Block           | A voxel type occupying grid cells in the world (stone, water, torch...).|
+| Item            | An inventory object. Every block automatically gets a corresponding item.|
+| Content source  | A filesystem path the engine scans for packs (see 02-pack-structure).   |
+| Mount point     | Internal virtual filesystem entry; each pack gets one named after its ID.|
+| Atlas           | A texture collection. Atlases `blocks` and `items` are built from PNGs in the pack's `textures/blocks/` and `textures/items/`. |
+| Caption         | Human-readable display name of a block/item shown in the inventory UI.  |
+
+## Namespaced IDs
+
+All content is addressed as `pack_id:content_name` — e.g. `base:dirt`,
+`base:grass_block`, `kompot:ui`.
+
+Rules for IDs (`[VERIFIED]`, identical rules for packs, blocks and items):
+
+- Allowed characters: Latin letters `a-z` `A-Z`, digits `0-9`, underscore `_`.
+- MUST NOT start with a digit.
+- Length MUST be 2..24 characters inclusive.
+- IDs are case-sensitive as written, but DO use lowercase for new content;
+  all real packs do.
+
+The special suffix `.item` denotes the item auto-generated for a block:
+`base:stone.item` is the item form of block `base:stone`. `[VERIFIED]`
+You only need the `.item` form when referencing a block's generated item
+explicitly (e.g. in loot tables).
+
+## Reserved names
+
+Pack IDs collide with mount point names, so these are reserved / unavailable for
+pack IDs: `res`, `user`, `world`, `project`, `config`, `core`. `core` is an
+additional engine-internal pseudo-pack that provides built-in content (e.g. the
+empty item `core:empty`). Engine-level tags are namespaced `core:*` (e.g. blocks
+carry `"tags": ["core:liquid"]`); packs add their own namespaced tags (the stock
+pack tags its ore `base:ore`). `[OBSERVED]`
+
+DO NOT use any of these as pack IDs.
+
+## What a content pack can contain
+
+A minimal pack is **just `package.json`** and it is valid — confirmed
+first-hand, nothing else is required. Everything else is optional subfolders:
+
+- `blocks/` — block definitions (JSON) — covered in 03-blocks.md
+- `items/` — item definitions (JSON) — covered in 04-items.md
+- `textures/` — PNG assets (`textures/blocks/`, `textures/items/`, ...) — covered
+  in 05-textures-and-assets.md
+- `block_materials/` — interaction material definitions (JSON) — covered in
+  05-textures-and-assets.md
+- `texts/` — localization files — covered in 05-textures-and-assets.md
+- `config/` — TOML config (`defaults.toml`, `bindings.toml`, `user-props.toml`)
+  — covered in 02-pack-structure.md
+- `package.json`, `icon.png`, `preload.json` — covered in 02-pack-structure.md
+- `content.json` — auto-generated by the engine. NEVER create or edit it by hand.
+- Excluded topics (defined but NOT documented in this guide): `entities/`,
+  `skeletons/`, `models/`, `sounds/`, `shaders/`, `fonts/`, `layouts/`,
+  `generators/`, `scripts/`, `modules/`, `presets/`, `animations/`. See
+  `docs/stubs/` before assuming anything about them.
+
+## How loading works (mental model)
+
+1. The engine scans **content sources** (folders) for subdirectories containing
+   a `package.json`.
+2. Each discovered pack is registered by the `"id"` from its `package.json`;
+   the folder name itself is not the identity, and in real packs it almost
+   never equals the ID. `[OBSERVED: pack folder
+   kompot_0f9103ff-1.2.2 ships id "kompot" and works]`
+3. Dependencies declared in `package.json` are resolved; missing hard
+   dependencies fail the load.
+4. All enabled packs' content folders (`blocks/`, `items/`, ...) are read and
+   every definition is registered into a global, namespaced registry
+   (`pack_id:name`).
+5. The engine writes/updates each pack's `content.json` (registry index used to
+   keep world saves stable across content changes).
+6. At runtime, blocks/items referenced anywhere (JSON or Lua) use the
+   `pack_id:name` string form; internally they become numeric runtime indices.
+
+Consequences you MUST respect:
+
+- AVOIDs nothing here: removing/renaming content that worlds already contain is
+  handled through `content.json` conversion, but renaming IDs still breaks
+  references in JSON/Lua and localization. Treat published IDs as immutable.
+- The engine does not currently compare pack versions when resolving duplicate
+  packs across sources — highest-priority source simply wins. `[DOC]`
+
+## Engine version policy of this guide
+
+This guide is written against the `main` branch state of October 2026 (base pack
+version 0.32). It is intentionally not pinned to a commit. If the engine changes
+JSON formats, the stock pack `res/content/base/` in the engine repo is always the
+authoritative example set — DO re-check it when in doubt.
+
+
+<!-- ===== docs/02-pack-structure.md ===== -->
+
+# 02. Pack Structure and Manifest
+
+This document defines where packs live, what `package.json` must contain, and
+which auxiliary files a pack may have.
+
+## Where packs live (content sources)
+
+The engine discovers packs in **content sources**, scanned in priority order
+(highest first). If the same pack ID exists in several sources, the
+highest-priority one wins and the rest are ignored. `[VERIFIED]`
+
+| Priority | Source           | Path                                        |
+| -------- | ---------------- | ------------------------------------------- |
+| 1        | `world:content`  | `<world folder>/content/`                   |
+| 2        | `user:content`   | `$HOME/.voxeng/content/`                    |
+| 3        | `project:content`| `<project folder>/content/` (project mode)  |
+| 4        | `res:content`    | `<engine>/res/content/` (built-in packs)    |
+
+Practical guidance:
+
+- For local development DO put your pack into `user:content`:
+  `~/.voxeng/content/<pack_id>/` on Linux. This works for any world.
+- Packs shipped inside a game project go to `<project>/content/` (see
+  07-example-repos.md for a real project doing this).
+- `res:content` is for content bundled with the engine build itself (the stock
+  `base` pack lives there).
+
+**Folder name vs pack ID.** The engine identifies a pack by the `"id"` inside
+`package.json`, NOT by the folder name. The folder name is free-form: real
+packs almost always use a folder name different from the ID, and exact matches
+are rare in the wild — for example a published project ships a pack in folder
+`kompot_0f9103ff-1.2.2` with `"id": "kompot"`, and it loads fine.
+`[OBSERVED]` NEVER assume that the folder name equals the pack ID. When you
+need a pack's ID, read its `package.json`; when you create a pack folder, any
+name works.
+
+## package.json (the only required file)
+
+`[VERIFIED]` Format and field semantics:
+
+```json
+{
+    "id":          "my_pack",
+    "title":       "My Pack",
+    "version":     "1.0.0",
+    "creator":     "Author Name",
+    "description": "What this pack adds",
+    "dependencies": ["base", "~randutil@>=1.0"]
+}
+```
+
+| Field          | Required | Format / notes                                                |
+| -------------- | -------- | ------------------------------------------------------------- |
+| `id`           | yes      | Pack ID, rules in 01-engine-overview.md                        |
+| `title`        | yes*     | Display name in the content menu                               |
+| `version`      | yes*     | `major.minor[.patch]`, e.g. `"1.0"`, `"0.32"`                  |
+| `creator`      | no       | Author name; OR use an array field `creators` instead `[DOC]`  |
+| `description`  | no       | Short free-form text                                           |
+| `dependencies` | no       | Array of dependency strings (see below)                        |
+| `license`      | no       | Observed in real packs (`"license": "MPL-2.0"`); engine ignores unknown fields `[OBSERVED]` |
+
+\* Official docs show `title`/`version` in every example; packs without them are
+unknown territory. DO always include `id`, `title`, `version`.
+
+### Dependencies
+
+Each dependency string is `[prefix]pack_id[@version_spec]`:
+
+| Prefix | Meaning      | Behavior                                                        |
+| ------ | ------------ | --------------------------------------------------------------- |
+| `!` or none | required | Pack fails to load without it (this is the default) `[DOC]`     |
+| `?`    | optional     | Loaded if present, ignored otherwise                            |
+| `~`    | weak         | Order-only / best-effort (documented as "weak dependency")      |
+
+Version spec operators exist (e.g. `>=1.0`, `*` = any, which is the default).
+Only `>=` is shown by official docs; AVOID inventing other operators (`<`, `=`)
+— they are not documented. `[VERIFIED: 'randutil@>=1.0' example]`
+
+Real examples:
+
+- Stock `base` pack has **no dependencies**:
+  `{ "id": "base", "title": "Base", "version": "0.32", "description": "basic content package" }`
+- Real pack: `"dependencies": ["kompot"]` (hard dependency on the Kompot UI pack).
+
+**DO declare a dependency on `"base"` if your pack uses `base:*` properties**
+such as `base:durability` or `base:loot` — those are user-defined properties
+registered by the `base` pack, not engine built-ins (see 03-blocks.md).
+
+## icon.png
+
+- Optional file at the **pack root** (NOT inside `textures/`). `[VERIFIED]`
+- Recommended size 128x128 `[DOC]`; the stock pack ships 64x64 and a real pack
+  ships 210x208, so the size is clearly not enforced. `[OBSERVED]`
+- DO keep it square PNG.
+
+## Folder layout
+
+Full layout documented upstream, annotated with this guide's scope. A minimal
+pack only needs `package.json`; create subfolders only when you actually define
+content.
+
+```text
+my_pack/
+├── package.json            # REQUIRED manifest
+├── icon.png                # optional, pack root
+├── blocks/                 # IN SCOPE  — 03-blocks.md
+├── items/                  # IN SCOPE  — 04-items.md
+├── block_materials/        # IN SCOPE  — 05-textures-and-assets.md
+├── textures/
+│   ├── blocks/             # IN SCOPE — auto-joins the global "blocks" atlas
+│   └── items/              # IN SCOPE — auto-joins the global "items" atlas
+├── texts/                  # IN SCOPE  — localization (05)
+├── preload.json            # IN SCOPE  — 05-textures-and-assets.md
+├── config/                 # partially in scope — see below
+├── content.json            # AUTO-GENERATED. NEVER hand-edit, NEVER create.
+├── entities/               # OUT OF SCOPE (stub)
+├── skeletons/              # OUT OF SCOPE (stub)
+├── models/                 # OUT OF SCOPE (stub)
+├── sounds/                 # OUT OF SCOPE (stub)
+├── shaders/                # OUT OF SCOPE
+├── fonts/                  # OUT OF SCOPE
+├── animations/             # OUT OF SCOPE (stub)
+├── layouts/                # OUT OF SCOPE (stub: XML UI)
+├── generators/             # OUT OF SCOPE (stub: worldgen)
+├── scripts/                # OUT OF SCOPE (Lua) — referenced by blocks/items
+├── modules/                # OUT OF SCOPE (Lua libraries)
+├── presets/                # OUT OF SCOPE
+├── devtools/               # OUT OF SCOPE
+├── resources.json          # engine resources (cameras, effects) — rare, skip
+└── resource-aliases.json   # resource aliases — rare, skip
+```
+
+`config/` subfolder:
+
+- `config/defaults.toml` — overrides default content bindings of the game:
+  the stock pack sets
+  ```toml
+  generator = "base:demo"
+  player-entity = "base:player"
+  hand-skeleton = "base:hand"
+  block-material = "base:stone"
+  ```
+  `[OBSERVED]` Only relevant for total-conversion-style packs; typical add-on
+  packs do not ship this file.
+- `config/bindings.toml` — key bindings declared by the pack. Real format:
+  ```toml
+  [kompot]
+  gallery = "key:f12"
+  ```
+  i.e. `[pack_id]` section, `action_name = "key:<code>"`. `[OBSERVED]`
+- `config/user-props.toml` — declares custom properties the pack adds to
+  blocks/items. Real example from `base`:
+  ```toml
+  "base:durability" = {}
+  "base:loot" = {}
+  ```
+  `[VERIFIED]` Custom properties are then read at runtime via Lua
+  (`block.properties[id]["prop"]`) — scripting, out of scope here.
+
+## Enabling a pack for a world
+
+- Normal mode: enable the pack in the engine's content menu when
+  creating/configuring a world (UI flow, not file-driven). Dependencies are
+  enabled automatically.
+- Project mode: a `project.toml` at the project root lists default packs:
+  ```toml
+  base_packs = ["base", "kompot", "wooden_meat_menu"]
+  ```
+  `[OBSERVED]` (from the wooden_meat_game project). Projects themselves are out
+  of scope — see docs/stubs/TODO-projects.md.
+
+## DO / AVOID summary
+
+- DO make the minimal pack first (`package.json` only), verify it loads, then add content.
+- DO treat the folder name as free-form; NEVER assume it must match the pack
+  ID (real packs rarely match — the ID lives only in `package.json`).
+- DO put `icon.png` at pack root, not in `textures/`.
+- DO declare `dependencies` when you reference `base:*` or any other pack's content.
+- AVOID editing `content.json` — it is generated; manual edits corrupt worlds (upstream warning).
+- AVOID version specs other than the documented `>=` form.
+- AVOID relying on pack `version` for resolution — content sources ignore versions entirely. `[DOC]`
+
+
+<!-- ===== docs/03-blocks.md ===== -->
+
+# 03. Blocks Reference
+
+Block definitions are JSON files in `blocks/` of the pack. The file name defines
+the content name: `blocks/dirt.json` in pack `base` becomes `base:dirt`.
+`[VERIFIED]` ID rules: see 01-engine-overview.md.
+
+A block file can be almost empty — every property has a default. The minimal
+sensible block is:
+
+```json
+{ "texture": "stone" }
+```
+
+Full real example from the stock pack (`base:grass_block`, comments added here,
+JSON itself is comment-free):
+
+```json
+{
+    "material": "base:grass_block",
+    "texture-faces": [
+        "grass_side",      // index 0: -X (west)
+        "grass_side",      // index 1: +X (east)
+        "dirt",            // index 2: -Y (bottom)
+        "grass_top",       // index 3: +Y (top)
+        "grass_side",      // index 4: -Z (north)
+        "grass_side"       // index 5: +Z (south)
+    ],
+    "base:durability": 1.7,
+    "base:loot": [
+        {"item": "base:dirt.item"}
+    ]
+}
+```
+
+## Texture properties
+
+### `texture` — single texture for all faces
+
+Texture NAME only: no path, no `.png` extension. The PNG must be in the pack's
+`textures/blocks/` folder. `[VERIFIED]` Example: `"texture": "dirt"` resolves to
+`<pack>/textures/blocks/dirt.png` and lands in the global `blocks` atlas.
+
+### `texture-faces` — per-face textures
+
+Array of exactly 6 texture names, order:
+
+| Index | Face        | Direction |
+| ----- | ----------- | --------- |
+| 0     | west        | −X        |
+| 1     | east        | +X        |
+| 2     | bottom      | −Y        |
+| 3     | top         | +Y        |
+| 4     | north       | −Z        |
+| 5     | south       | +Z        |
+
+`[VERIFIED]` against engine face constants (`FACE_MX, FACE_PX, FACE_MY, FACE_PY,
+FACE_MZ, FACE_PZ` in `src/voxels/Block.hpp`) and the stock `grass_block.json`.
+This order is NOT stated in official docs — it was extracted from source + real
+files. Fewer than 6 elements is a hard load error. `[OBSERVED: engine throws]`
+
+- `texture` and `texture-faces` are mutually exclusive. `[DOC — IMPORTANT]`
+
+### `overlay-texture`
+
+Seen in stock `water.json` (`"overlay-texture": "blocks:water"`); value is an
+atlas reference (`atlas:name`). Not documented upstream. `[OBSERVED]`
+
+## Model properties
+
+### `model` — built-in model type
+
+| Value    | Behavior                                                              |
+| -------- | --------------------------------------------------------------------- |
+| `block`  | Default full cube (default for all blocks)                             |
+| `none`   | Invisible block (air-like)                                             |
+| `X`      | Two crossed sprites — grass/flowers style (see `flower.json` example)  |
+| `aabb`   | Mesh matches the block hitbox (pipes, torch, doors, lamps)             |
+| `custom` | Requires `model-name` (custom model file) — OUT OF SCOPE, see stubs    |
+
+`[VERIFIED]`
+
+### `model-name` — custom model file
+
+Value is a model name without the `<pack>:models/` prefix and without extension.
+Custom models are an excluded topic (docs/stubs/TODO-models.md). Textures used
+inside custom models must live in the `blocks` atlas and be referenced as
+`blocks:name`. `[DOC]`
+
+### `draw-group` — integer
+
+Render group number. Relevant for translucent blocks (water uses `3`, sprites
+like flowers use `1`) to fix invisible-face sorting issues. `[VERIFIED]`
+
+### `translucent` — boolean
+
+Enables alpha translucency of the texture (water, ice). Costs performance; NOT
+needed for full transparency (leaves, flowers) and NOT needed with `draw-group`
+alone. `[DOC]`
+
+### `solid` — boolean
+
+Declares a `custom`-model block as fully solid so hidden-face culling works like
+for `block` cubes. Ignored when `false`. `[DOC]`
+
+### `culling` — `"default"` | `"optional"` | `"disabled"`
+
+Face culling mode within a draw group. `[DOC]`
+
+### `shadeless` — boolean
+
+Disables lighting on the block model (torch flame uses it). `[VERIFIED]`
+
+### `ambient-occlusion` — boolean (default true)
+
+Vertex ambient occlusion toggle. `[VERIFIED]`
+
+## Rotation
+
+### `rotation` — placement rotation profile
+
+| Value     | For blocks like            |
+| --------- | -------------------------- |
+| `none`    | default; no rotation       |
+| `pipe`    | logs, pipes, torches (axis alignment) |
+| `pane`    | panels, doors, signs (flat alignment) |
+| `stairs`  | stairs (`pane` + upside-down variants) |
+| `ladder`  | ladders (`pipe` on vertical + `pane` on horizontal surfaces) |
+
+`[DOC]` Real usage: `wood.json` and `torch.json` use `"rotation": "pipe"`,
+`wooden_door.json` uses `"pane"`. `[OBSERVED]`
+
+## Lighting
+
+### `emission` — `[R, G, B]`, each 0..15
+
+Light emitted by the block. `[15,15,15]` = brightest white; `[0,0,0]` (default) =
+no emission. `[VERIFIED]` Example: stock lamp: `"emission": [15, 14, 13]`,
+torch: `"emission": [13, 10, 2]`.
+
+### `light-passing` — boolean
+
+Block lets light from emitters pass through. Flowers, torch, water, glass set it. `[VERIFIED]`
+
+### `sky-light-passing` — boolean
+
+Block does not block the vertical sunbeam. Water explicitly sets `false`
+(so it darkens underwater). `[VERIFIED]`
+
+## Physics
+
+### `obstacle` — boolean (default true)
+
+`false` removes the hitbox — players walk through (flowers, water, torch). `[VERIFIED]`
+
+### `hitbox` — `[x, y, z, w, h, d]`, all in 0..1
+
+Offset + size of the hitbox inside the block cell. Example from `torch.json`:
+`[0.4375, 0.0, 0.4375, 0.125, 0.5, 0.125]` = small stick in the middle.
+`[VERIFIED]` Axis semantics: +X=east, +Y=up, +Z=south (from upstream docs of the
+hitbox example). For multiple boxes use `hitboxes` with an array of such arrays
+(stock door uses it). `[VERIFIED]`
+
+### `grounded` — boolean
+
+Block must be placed on a full block and breaks when support breaks (flowers,
+torch). `[VERIFIED]`
+
+### `selectable` — boolean (default true)
+
+`false` — the cursor targets blocks behind it (water). `[VERIFIED]`
+
+### `replaceable` — boolean
+
+`true` — placing any block replaces this one (water, grass, flowers). `[VERIFIED]`
+
+### `breakable` — boolean (default true)
+
+`false` — block cannot be broken. `[DOC]`
+
+### `size` — `[sx, sy, sz]` integers, default `[1,1,1]`
+
+Extended (multi-cell) blocks; the stock door is `"size": [1, 2, 1]`. `[VERIFIED]`
+With `grounded` on extended blocks, `grounding-behaviour` picks which segments
+need support: `partial` (default) / `complete` / `origin`. `[DOC]`
+
+## Inventory & interaction
+
+### `caption` — display name
+
+Human-readable name. Blocks normally skip it: the default caption is derived
+from the ID with underscores turned into spaces (`grass_block` → `grass block`),
+and the engine upper-cases it for display. Localization then maps caption
+strings (see 05). The stock pack sets `"caption": "tall grass"` only where the
+auto name is wrong. `[OBSERVED]`
+
+### `hidden` — boolean
+
+Hides the block from inventory and suppresses auto-generated item; upstream
+docs say from engine 0.17+ such blocks MUST define `picking-item`. `[DOC]`
+
+### `picking-item` — item ID
+
+Item given by middle-click pick. Stock example: hidden `door:door_open` sets
+`"picking-item": "door:door.item"`. `[DOC]`
+
+### `inventory-size` — integer (default 0)
+
+Slots of the block's own inventory (containers). UI hookup is an excluded topic. `[DOC]`
+
+### `ui-layout` — layout ID for the block's UI. Excluded topic. `[DOC]`
+
+## Materials (interaction sounds)
+
+### `material` — `pack:material_name`
+
+References a definition in `block_materials/` that maps to step/place/break/hit
+sounds. See 05-textures-and-assets.md for the material file format. Stock
+examples: `"material": "base:wood"`, `"base:ground"`, `"base:glass"`. `[VERIFIED]`
+
+## Data & scripting hooks (short)
+
+- `fields` — typed per-block data slots (int8..int64, float32/64, char; total
+  ≤ 240 bytes; array `length` supported; `convert-strategy`: `reset`/`clamp`).
+  `[DOC]` Useful only together with Lua — see stubs before using.
+- `state-based` — variant table switching `model`/`model-name`/`texture`/
+  `texture-faces` by user bits (`offset`, `bits`, `variants`, max 16 variants).
+  `[DOC]` Controlled from Lua via `block.set_variant(x, y, z, index)`.
+- `script-name` — script file name (without `pack:scripts/` and extension) that
+  holds this block's event handlers. Default: the block's own name. `[DOC]`
+- `tick-interval` — world ticks (1/20 s) between `on_block_tick` events. `[DOC]`
+- `properties@append` — any list property can be suffixed with `@append` by
+  *other packs* to extend instead of overwrite. `[DOC]`
+
+## Tags
+
+`"tags": ["core:liquid", ...]` — free-form labels; prefix them with a namespace
+to avoid collisions. The engine uses the `core:*` namespace (stock water block:
+`"tags": ["core:liquid"]`); the stock pack namespaces its own tags as `base:ore`
+(coal ore). `[VERIFIED]` Other packs can tag your content from their own
+`tags.toml` file:
+
+```toml
+"my_pack:gemlike" = ["some_pack:some_ore", "my_pack:ruby_ore"]
+"my_pack:flammable" = ["my_pack:wooden_floor"]
+```
+
+## Properties registered by the `base` pack (not engine built-ins!)
+
+- `base:durability` — seconds to break without tools. Stock: dirt 1.5,
+  grass_block 1.7, stone 12.0, wood 6.0, flower 0.0. `[VERIFIED]`
+- `base:loot` — array of `{ "item": "pack:item", "count": n | "min": n, "max": m, "chance": p }`.
+  `item` MUST be an ITEM id — for a block's item form append `.item`
+  (`"base:dirt.item"`). `chance` default 1.0. `[VERIFIED]`
+- Drop semantics observed in the stock pack: blocks WITHOUT `base:loot` (stone,
+  dirt) drop their own generated item when broken; `"base:loot": []` (tall
+  grass) means drop nothing. `[OBSERVED]`
+- Using either REQUIRES a dependency on `"base"` (02-pack-structure.md).
+
+## Observed-but-undocumented properties
+
+- `surface-replacement` — stock `dirt.json` sets `"surface-replacement": "base:grass_block"`;
+  grass spreading to exposed dirt is implemented via this + the block script's
+  `on_random_update`. Semantics are not documented upstream. `[OBSERVED]`
+- `overlay-texture` — see Texture properties. `[OBSERVED]`
+- Block-level `caption` — see above. `[OBSERVED]`
+
+DO NOT rely on undocumented properties for anything critical; prefer documented
+equivalents and check the stock pack again when the engine updates.
+
+## Annotated stock examples
+
+`base:dirt` — minimal solid cube with base-pack props:
+
+```json
+{
+    "texture": "dirt",
+    "material": "base:ground",
+    "surface-replacement": "base:grass_block",
+    "base:durability": 1.5
+}
+```
+
+`base:flower` — crossed sprite, no collision, replaceable, no loot:
+
+```json
+{
+    "texture": "flower",
+    "material": "base:grass",
+    "draw-group": 1,
+    "light-passing": true,
+    "obstacle": false,
+    "replaceable": true,
+    "grounded": true,
+    "model": "X",
+    "hitbox": [0.15, 0.0, 0.15, 0.7, 0.7, 0.7],
+    "base:durability": 0.0
+}
+```
+
+`base:water` — translucent liquid:
+
+```json
+{
+    "texture": "water",
+    "overlay-texture": "blocks:water",
+    "draw-group": 3,
+    "light-passing": true,
+    "sky-light-passing": false,
+    "obstacle": false,
+    "selectable": false,
+    "replaceable": true,
+    "translucent": true,
+    "tags": ["core:liquid"]
+}
+```
+
+`base:torch` — `aabb` model, light, particles, rotation:
+
+```json
+{
+    "texture-faces": ["torch_side","torch_side","torch_bottom","torch_top","torch_side","torch_side"],
+    "emission": [13, 10, 2],
+    "model": "aabb",
+    "hitbox": [0.4375, 0.0, 0.4375, 0.125, 0.5, 0.125],
+    "light-passing": true,
+    "shadeless": true,
+    "obstacle": false,
+    "grounded": true,
+    "rotation": "pipe",
+    "material": "base:wood",
+    "base:durability": 0.1
+}
+```
+(`particles` object shortened; particle configs are an excluded topic.)
+
+## DO / AVOID summary
+
+- DO start every block JSON with `texture` or `texture-faces`; add the rest as needed.
+- DO give `texture-faces` exactly 6 entries in the west/east/bottom/top/north/south order.
+- DO use `"model": "X"` + `obstacle:false` + `replaceable:true` + `grounded:true` + `draw-group:1` for plants.
+- DO reference block-derived items with the `.item` suffix in loot/pick properties.
+- AVOID combining `texture` with `texture-faces` in one block.
+- AVOID `translucent` unless you need alpha blending (prefer `draw-group` + `light-passing`).
+- AVOID inventing property names; everything allowed is listed above or in upstream docs.
+- AVOID depending on `[OBSERVED]` properties without a fallback plan.
+
+
+<!-- ===== docs/04-items.md ===== -->
+
+# 04. Items Reference
+
+Item definitions are JSON files in `items/` of the pack. The file name defines
+the content name: `items/shotgun.json` in pack `my_pack` becomes
+`my_pack:shotgun`. `[VERIFIED]`
+
+Every block also automatically gets an item — addressed as
+`<pack>:<block_name>.item` — which places the block on right-click. DO NOT
+create `items/<name>.json` for a block that already exists; that suffix form is
+for *referencing* the generated item, not a file path.
+
+## Real annotated examples
+
+Stock pack, `base:bazalt_breaker` (a tool-like item):
+
+```json
+{
+    "icon-type": "sprite",
+    "icon": "items:bazalt_breaker",
+    "uses": 100
+}
+```
+
+Real game pack, `my_pack:shotgun` (wooden_meat_game):
+
+```json
+{
+    "icon-type": "sprite",
+    "icon": "items:shotgun",
+    "stack-size": 1,
+    "model-name": "shotgun"
+}
+```
+`model-name: "shotgun"` resolves to `my_pack:models/shotgun.obj` — models are an
+excluded topic (docs/stubs/TODO-models.md); omitting `model-name` makes the
+engine generate a default model.
+
+Real game pack, `my_pack:spawn_nepis` (spawn-egg style item driven by a script):
+
+```json
+{
+    "icon-type": "sprite",
+    "icon": "items:nepis"
+}
+```
+
+## Property reference
+
+### Visual
+
+| Property     | Type   | Meaning                                                                 |
+| ------------ | ------ | ----------------------------------------------------------------------- |
+| `icon-type`  | string | `sprite` (2D icon) \| `block` (3D block preview). `none` exists only for `core:empty` and may be removed — AVOID using it. `[DOC]` |
+| `icon`       | string | For `sprite`: `atlas:texture` — e.g. `items:shotgun`, `blocks:dirt`. For `block`: block ID — e.g. `base:wood`. `[VERIFIED]` |
+| `model-name` | string | Item model name; default `packid:itemname`; auto-generated when absent. `[DOC]` |
+| `caption`    | string | Display name in inventory. Supports inline `md` markup. `[DOC]` Default caption derives from the ID (underscores → spaces). `[OBSERVED]` |
+| `description`| string | Inventory tooltip. Supports inline `md` markup. `[DOC]` |
+
+The two automatic atlases are `blocks` (from `textures/blocks/*.png`) and
+`items` (from `textures/items/*.png`) — same for every pack; your PNGs simply
+join them by file name. See 05-textures-and-assets.md.
+
+### Behavior
+
+| Property        | Type    | Meaning                                                                 |
+| --------------- | ------- | ----------------------------------------------------------------------- |
+| `placing-block` | string  | Block ID placed on right-click. This is what generated block-items use internally. `[DOC]` |
+| `emission`      | [R,G,B] | Light emitted while held in hand, each channel 0..15. `[DOC]`            |
+| `stack-size`    | int     | Max per inventory slot. Default 64. Shotgun uses 1. `[VERIFIED]`         |
+| `uses`          | int     | Durability/consumable counter, driven via `inventory.use()` from Lua. Shown in inventory UI. `[VERIFIED]` |
+| `uses-display`  | string  | `none` \| `number` \| `relation` \| `vbar` (default `vbar`). `[DOC]`     |
+| `script-name`   | string  | Script file (without `pack:scripts/` and extension) with the item's event handlers. Default: the item's own name. `[DOC]` |
+
+### Tags
+
+`"tags": ["core:fuel", "my_pack:gems"]` — same rules as block tags: namespaced,
+`core:*` reserved for the engine. `[VERIFIED]` Other packs may tag your items
+from their `tags.toml`.
+
+### Item scripts (boundary knowledge only)
+
+An item whose JSON has no `placing-block` usually gets behavior from a Lua
+script `scripts/<script-name>.lua`. Event handlers are global Lua functions, e.g.
+`function on_use(pid)` — the stock pack's `bazalt_breaker.lua` and the game's
+`shotgun.lua` both define `on_use(pid)`. `[OBSERVED]` The full event/API list is
+a Lua-scripting topic: NOT covered here — read `doc/ru/scripting.md` +
+`doc/ru/scripting/` in the engine repo before writing item scripts.
+
+## Localization of captions
+
+Caption strings are looked up in the pack's `texts/<locale>.txt` files
+(`key=value` per line). The stock pack translates `"bazalt breaker"` (the
+auto-derived caption of `bazalt_breaker`) in `ru_RU.txt` as
+`bazalt breaker=крушитель базальта`. `[VERIFIED]` Details in 05.
+
+## DO / AVOID summary
+
+- DO give every item an explicit `icon-type: "sprite"` + `icon: "items:<name>"`.
+- DO ship a 16x16 PNG at `textures/items/<name>.png` for each sprite icon.
+- DO use `placing-block` if you want an item that places an existing block under
+  a different identity/name.
+- DO use `stack-size: 1` for tools/weapons.
+- AVOID creating an item file duplicating a block (`base:dirt.item` already exists).
+- AVOID `icon-type: "none"` — documented as removable, used only by `core:empty`.
+- AVOID referencing atlas textures with paths or `.png` extensions — only `atlas:name`.
+- AVOID guessing item event handler names beyond `on_use(pid)` without checking
+  the engine's scripting docs.
+
+
+<!-- ===== docs/05-textures-and-assets.md ===== -->
+
+# 05. Textures, Atlases, preload.json, Materials, Localization
+
+This document covers the asset side of the IN-SCOPE topics: block/item textures,
+the pack icon, asset preloading, block materials, and caption localization.
+
+## Texture folders and atlases
+
+Two global texture atlases exist and every pack contributes to them
+automatically: `[VERIFIED]`
+
+| Atlas    | Fed by                       | Used for                          |
+| -------- | ---------------------------- | --------------------------------- |
+| `blocks` | `<pack>/textures/blocks/*.png` | block `texture`/`texture-faces`, block-model textures |
+| `items`  | `<pack>/textures/items/*.png`  | item sprite icons (`icon: "items:x"`) |
+
+Rules:
+
+- Texture NAME = file name without `.png`. `"texture": "dirt"` →
+  `textures/blocks/dirt.png` → atlas entry `blocks:dirt`. `[VERIFIED]`
+- Stock pack textures are 16x16 RGBA PNG. DO use 16x16 (or a consistent power
+  of two) — mixed sizes across packs are untested territory. `[OBSERVED]`
+- AVOID referencing textures by path or with `.png` — always `atlas:name`.
+- Name collisions between packs in the same atlas are not documented; DO prefix
+  file names with something pack-specific when genericity is likely
+  (`mymod_gear.png` instead of `gear.png`). `[OBSERVED-CONCERN]`
+
+Additional pack textures (GUI, particles, sky) are loaded only through
+`preload.json` `"textures"` — plain paths relative to `textures/` without
+extension, e.g. `"gui/crosshair"` from `<pack>/textures/gui/crosshair.png`.
+`[VERIFIED: stock preload.json]`
+
+Custom atlases: `preload.json` accepts an `"atlases"` array, e.g. stock pack:
+`"atlases": [{"name": "cracks", "type": "separate"}]` (folder
+`textures/cracks/`); the Kompot pack registers atlases `kompot_ui_icons` /
+`kompot_ui_skin`. Custom atlas machinery is UI/advanced territory — out of
+scope. `[OBSERVED]`
+
+## Pack icon
+
+`icon.png` at the pack root, square PNG, recommended 128x128 `[DOC]`; existing
+packs range from 64x64 to 210x208 and load fine `[OBSERVED]`.
+
+## preload.json
+
+Optional file at pack root preloading assets the engine would not load on
+demand. Format: object whose keys are asset categories, values are arrays of
+asset names/paths (no extensions). `[VERIFIED]`
+
+Categories: `animation`, `fonts`, `models`, `shaders`, `skeletons`, `sounds`,
+`textures`. Extras seen in real packs: `atlases` (see above). `[OBSERVED]`
+
+```json
+{
+    "atlases": [{"name": "cracks", "type": "separate"}],
+    "sounds":  ["blocks/door_open", "events/pickup"],
+    "models":  ["drop-item"],
+    "textures": ["misc/moon", "misc/sun", "gui/crosshair"]
+}
+```
+
+Real game-pack example (wooden_meat_game / my_pack):
+
+```json
+{
+    "animation": ["hit", "rip"],
+    "sounds": ["shotgun"],
+    "textures": ["gfx/muzzle_flash", "gfx/tracer"]
+}
+```
+
+Sound names load all variant files by pattern: `sound_name.ogg`,
+`sound_name_1.ogg`, `sound_name_2.ogg`, ... or `sound_name_0.ogg`, ... `[DOC]`
+
+Fonts entries are objects `{"name": "kompot_12", "path": "fonts/IBMPlexSans-Regular.ttf", "size": 12}` `[OBSERVED]`.
+
+AVOID preloading things you do not use — upstream docs explicitly warn against
+unnecessary preload entries. `[DOC]`
+
+## Block materials (`block_materials/`)
+
+A *material* bundles interaction sounds for blocks. Blocks reference it by
+`"material": "pack:material_name"`; files are JSON in `block_materials/`
+(`block_materials/wood.json` → `base:wood`). `[VERIFIED]`
+
+```json
+{
+    "steps-sound": "steps/wood",
+    "place-sound": "blocks/wood_place",
+    "break-sound": "blocks/wood_break",
+    "hit-sound": "blocks/wood_hit",
+    "sound-absorption": 0.5
+}
+```
+
+- Sound values are names resolved against loaded sounds (sounds themselves are
+  an EXCLUDED topic — docs/stubs/TODO-sounds.md; the stock sounds live in the
+  `base` pack).
+- The stock `config/defaults.toml` sets `block-material = "base:stone"` as the
+  game-wide fallback. `[OBSERVED]`
+- DO reuse existing `base:*` materials (`base:stone`, `base:wood`, `base:ground`,
+  `base:glass`, `base:grass`, `base:metal`, ...) instead of creating duplicates.
+- AVOID creating a material with sound names that no loaded pack provides.
+
+## Localization (`texts/`)
+
+Files named by locale: `en_US.txt`, `ru_RU.txt`, `fi_FI.txt`, `uk_UA.txt`,
+`uz_UZ.txt` are all observed in real packs. `[VERIFIED]`
+
+Format — one `key=value` pair per line. Content captions use the caption string
+itself as the key: `[VERIFIED]`
+
+```text
+# ru_RU.txt of the base pack (excerpt)
+dirt=земля
+grass block=дёрн
+bazalt breaker=крушитель базальта
+```
+
+- Caption keys match the lowercased caption (the engine auto-capitalizes for
+  display; docs recommend NOT capitalizing captions yourself). `[DOC]`
+- UI-level translations use dotted keys, e.g. `kompot.gallery=Kompot / Gallery`
+  in the Kompot pack. `[OBSERVED]`
+- DO provide `en_US.txt` only for entries that differ from the caption itself;
+  captions are already the English defaults.
+
+## DO / AVOID summary
+
+- DO drop every block texture into `textures/blocks/<name>.png` and every item
+  icon into `textures/items/<name>.png` — nothing else needed for them to work.
+- DO keep textures 16x16 RGBA PNG for blocks/items.
+- DO reference textures as `blocks:name` / `items:name` everywhere.
+- DO preload only what is not auto-loaded (extra textures, sounds, models).
+- AVOID `.png` extensions and folder paths inside `texture`/`icon` values.
+- AVOID editing preload entries for auto-loaded assets (blocks/items atlas
+  textures do not need preload).
+- AVOID translating by editing captions per language — captions stay in English;
+  translations go to `texts/<locale>.txt`.
+
+
+<!-- ===== docs/06-walkthrough.md ===== -->
+
+# 06. Walkthrough: Build a Complete Minimal Pack
+
+Goal: a working pack `my_first_pack` that adds:
+- block `my_first_pack:ruby_ore` — a stone-like ore cube,
+- block `my_first_pack:ruby_lamp` — a glowing cube,
+- block `my_first_pack:ruby_flower` — a decorative plant,
+- item `my_first_pack:ruby` — a plain sprite item,
+- a pack icon.
+
+No Lua, no models, no sounds — pure declarative content. Every file below is
+complete and final; assemble them in order and the pack works.
+
+## Step 0 — Choose the location
+
+DO develop in the user content folder so any world can use the pack:
+
+```text
+$HOME/.voxeng/content/my_first_pack/
+```
+
+(Linux path; `user:content` source, priority above `res:content` — see
+02-pack-structure.md.) The folder name is free-form — it does NOT need to
+match the pack ID (real packs rarely match). This walkthrough uses the ID as
+the folder name purely for tidiness.
+
+## Step 1 — package.json (pack becomes loadable)
+
+File: `my_first_pack/package.json`
+
+```json
+{
+    "id": "my_first_pack",
+    "title": "My First Pack",
+    "version": "0.1.0",
+    "creator": "Your Name",
+    "description": "Ruby ore, lamp, flower and a ruby item",
+    "dependencies": ["base"]
+}
+```
+
+`dependencies: ["base"]` is REQUIRED here because the blocks below use
+`base:durability` and `base:loot` (properties registered by `base`).
+
+STOP and verify: the pack must already appear in the engine's content menu with
+no other files at all.
+
+## Step 2 — Textures
+
+Create two folders and four PNG files, 16x16, RGBA:
+
+```text
+textures/blocks/ruby_ore.png
+textures/blocks/ruby_lamp.png
+textures/blocks/ruby_flower.png
+textures/items/ruby.png
+```
+
+Any 16x16 pixel-art works while prototyping. The file names become the texture
+names (`ruby_ore`, ...). No `.json` needed for textures — the atlases pick PNGs
+up automatically (see 05).
+
+## Step 3 — The ore block
+
+File: `blocks/ruby_ore.json`
+
+```json
+{
+    "texture": "ruby_ore",
+    "material": "base:stone",
+    "base:durability": 3.0,
+    "base:loot": [
+        {"item": "my_first_pack:ruby", "min": 1, "max": 2, "chance": 1.0}
+    ]
+}
+```
+
+Notes:
+- `"texture"` — single texture on all 6 faces (order not relevant here).
+- `"material": "base:stone"` — reuses base's sounds; no sound files needed.
+- loot drops the ITEM `my_first_pack:ruby` defined in Step 6.
+
+## Step 4 — The lamp block
+
+File: `blocks/ruby_lamp.json`
+
+```json
+{
+    "texture": "ruby_lamp",
+    "material": "base:glass",
+    "emission": [14, 4, 4],
+    "light-passing": true,
+    "base:durability": 0.5
+}
+```
+
+`emission` channels are 0..15; `[14, 4, 4]` is strong red. This block drops
+itself when broken: blocks without `base:loot` default to dropping their own
+generated item (stock stone/dirt behave this way `[OBSERVED]`).
+
+## Step 5 — The flower block (crossed sprite)
+
+File: `blocks/ruby_flower.json`
+
+```json
+{
+    "texture": "ruby_flower",
+    "material": "base:grass",
+    "model": "X",
+    "draw-group": 1,
+    "light-passing": true,
+    "obstacle": false,
+    "replaceable": true,
+    "grounded": true,
+    "hitbox": [0.15, 0.0, 0.15, 0.7, 0.5, 0.7],
+    "base:durability": 0.0,
+    "base:loot": []
+}
+```
+
+This is the stock flower recipe: `model X` + no obstacle + replaceable + grounded
++ draw-group 1. `"base:loot": []` means it drops nothing (vs. default self-drop).
+
+## Step 6 — The ruby item
+
+File: `items/ruby.json`
+
+```json
+{
+    "icon-type": "sprite",
+    "icon": "items:ruby",
+    "stack-size": 64
+}
+```
+
+`"icon": "items:ruby"` points at `textures/items/ruby.png` from Step 2. This
+item is inert (no `placing-block`, no script) — it is a material/crafting-style
+resource.
+
+## Step 7 — Pack icon
+
+Save a square PNG as `icon.png` at the pack root (128x128 recommended).
+
+## Step 8 — Enable and test
+
+1. Launch the engine.
+2. Create or open a world; open the content selection and enable
+   **My First Pack** (its dependency `base` is required for any world anyway).
+3. In game: give items through the inventory/content screen, place the ore,
+   break it — the ruby item drops; place the lamp — the area lights red; place
+   the flower on top of a full block.
+
+## Final file tree
+
+```text
+my_first_pack/
+├── package.json
+├── icon.png
+├── blocks/
+│   ├── ruby_ore.json
+│   ├── ruby_lamp.json
+│   └── ruby_flower.json
+├── items/
+│   └── ruby.json
+└── textures/
+    ├── blocks/
+    │   ├── ruby_ore.png
+    │   ├── ruby_lamp.png
+    │   └── ruby_flower.png
+    └── items/
+        └── ruby.png
+```
+
+(`content.json` appears next to `package.json` after the pack loads — generated
+by the engine. AVOID touching it.)
+
+## Extensions beyond this walkthrough
+
+- Per-face textures → `texture-faces` (03-blocks.md).
+- Localization of captions → `texts/ru_RU.txt` with `ruby ore=рубиновая руда`
+  (05-textures-and-assets.md).
+- Behavior (drop-on-use, ticking) → Lua scripts, out of scope; see stubs and
+  then the engine's `doc/ru/scripting.md`.
+
+## Verification checklist
+
+- [ ] `package.json` parses as JSON (no trailing commas, no comments).
+- [ ] `id` passes the character/length rules and is not reserved (the folder
+      name may be anything — equality with `id` is not required).
+- [ ] Every `texture`/`icon` name has a matching PNG in the right folder.
+- [ ] Every `pack:` reference points to an existing pack (dependency declared).
+- [ ] `base:*` properties are used only with `"base"` in dependencies.
+- [ ] No `content.json` in your source files (engine generates it).
+
+
+<!-- ===== docs/07-example-repos.md ===== -->
+
+# 07. Annotated Breakdown of Real Repositories
+
+Two real-world repositories are referenced by this guide. Read this file to map
+their structure onto the concepts, and to know which of their folders are OUT OF
+SCOPE of this guide.
+
+- Game project: <https://github.com/George-Noise/wooden_meat_game>
+- UI pack: <https://github.com/George-Noise/fork_of_kompot>
+
+Both are unfinished but load and run; they are referenced as *structure
+evidence*, not as style guides.
+
+## wooden_meat_game — a game project wrapping several packs
+
+Top level is a **project**, not a pack (projects are an excluded topic — see
+docs/stubs/TODO-projects-worldgen.md):
+
+```text
+wooden_meat_game/
+├── project.toml            # project manifest
+├── project_client.lua      # project-level client script   (out of scope)
+├── start.lua               # project entry script           (out of scope)
+├── voxelcore_types.lua     # Lua type annotations           (out of scope)
+└── content/                # project:content source — packs live here
+```
+
+`project.toml`:
+
+```toml
+name = "wooden_meat_game"
+title = "Wooden Meat Game"
+base_packs = ["base", "kompot", "wooden_meat_menu"]
+permissions = []
+```
+
+`base_packs` lists packs enabled by default; they resolve against
+`project:content` (this repo's `content/`) and lower-priority sources.
+`[OBSERVED]`
+
+### Packs inside content/
+
+| Folder                      | id in package.json | Lesson                                              |
+| --------------------------- | ------------------ | --------------------------------------------------- |
+| `kompot_0f9103ff-1.2.2/`    | `kompot`           | **Folder name ≠ pack ID** — engine reads the ID from package.json `[OBSERVED]` |
+| `my_pack/`                  | `my_pack`          | Title differs from id: "Simple Box and Gun" — fine  |
+| `sfx/`                      | `vd_ambient_sfx`   | Folder `sfx`, id `vd_ambient_sfx` — again ≠         |
+| `vd_belt_system/`           | `vd_belt_system`   | Conventional 1:1 naming (recommended default)       |
+| `wooden_meat_menu/`         | `wooden_meat_menu` | Declares `"dependencies": ["kompot"]` `[OBSERVED]`  |
+
+Vendored-pack naming (`kompot_<hash>-<version>`) is a human-organization trick;
+the engine only sees id `kompot`.
+
+### my_pack — what is in scope
+
+```text
+my_pack/
+├── package.json            # id "my_pack", version "0.0.1"
+├── icon.png                # 210x208 — icon size is not enforced
+├── content.json            # auto-generated (items/entities lists)
+├── items/
+│   ├── shotgun.json
+│   ├── spawn_nepis.json
+│   └── spawn_turret.json
+├── textures/
+│   └── items/              # shotgun.png, nepis.png, turret.png → items atlas
+├── preload.json
+├── scripts/ ...            # Lua event handlers (out of scope)
+├── entities/ ...           # out of scope
+├── models/ ...             # out of scope
+├── animation/, skeletons/, sounds/   # out of scope
+```
+
+`package.json` has no `dependencies` yet references only its own content —
+correct, because it does not use `base:*` properties.
+
+`items/shotgun.json`:
+
+```json
+{
+  "icon-type": "sprite",
+  "icon": "items:shotgun",
+  "stack-size": 1,
+  "model-name": "shotgun"
+}
+```
+
+Takeaways (all `[OBSERVED]`):
+- Sprite icon `"items:shotgun"` ↔ file `textures/items/shotgun.png`.
+- `stack-size: 1` for a weapon; `model-name: "shotgun"` pulls
+  `models/shotgun.obj`.
+- `items/spawn_nepis.json` has only `icon-type`+`icon` — the rest of behavior
+  lives in `scripts/spawn_nepis.lua` (handler `on_use(pid)`, spawns an entity).
+- `preload.json` preloads only non-auto assets: animations, one sound, two
+  effect textures (see 05).
+- Note the absence of `blocks/` — a pack is NOT required to define blocks.
+
+## fork_of_kompot — a pack distributing a Lua framework
+
+Kompot is a declarative-UI framework pack ("Jetpack-Compose-like") distributed
+AS a content pack. UI is an excluded topic (docs/stubs TODO-xml-ui / Lua UI);
+this section extracts only pack-structure lessons. `[OBSERVED]` throughout.
+
+```text
+fork_of_kompot/
+├── package.json            # id "kompot", version "1.2.2", "license": "MPL-2.0"
+├── icon.png
+├── preload.json            # 28 font entries + 2 custom atlases
+├── modules/                # Lua libraries: modules/kompot.lua + modules/kompot/...
+├── scripts/hud.lua         # content script
+├── layouts/                # gallery.xml + gallery.xml.lua (layout + companion script)
+├── config/bindings.toml    # [kompot] gallery = "key:f12"
+├── texts/                  # en_US.txt, ru_RU.txt — incl. dotted keys
+├── fonts/                  # IBM Plex TTFs (out of scope)
+├── textures/               # UI skin/icons textures (out of scope)
+├── annotations/            # editor/LLM Lua annotations (out of scope)
+├── docs/, art/, LICENSES/, CHANGELOG.md, README.md   # repo hygiene, engine ignores
+```
+
+Takeaways relevant to pack authors:
+
+- `package.json` extra field `"license"` is tolerated (engine ignores unknown
+  fields). Metadata for humans goes fine there.
+- A pack CAN ship pure code/assets with zero blocks and zero items — Kompot has
+  no `blocks/` or `items/` folder at all.
+- `preload.json` fonts use object entries:
+  `{"name": "kompot_12", "path": "fonts/IBMPlexSans-Regular.ttf", "size": 12}`
+  — font NAMES are how other content references them.
+- `config/bindings.toml` binds a pack action to a key:
+  ```toml
+  [kompot]
+  gallery = "key:f12"
+  ```
+- Localization files mix content-caption style keys and dotted keys:
+  `kompot.gallery=Kompot / Gallery`.
+- Consuming packs declare `"dependencies": ["kompot"]` and call its modules via
+  `require "kompot:kompot"` — modules are namespaced by pack id (Lua topic).
+
+## Which files in these repos are engine-relevant vs ignored
+
+Engine-relevant (affect loading/content): `package.json`, `icon.png`,
+`preload.json`, `content.json` (generated), `blocks/`, `items/`,
+`block_materials/`, `textures/`, `texts/`, `config/`, plus the out-of-scope
+content folders listed in 02.
+
+Ignored by the engine (repo hygiene, safe to keep for humans/LLMs): `README.md`,
+`CHANGELOG.md`, `LICENSE`, `LICENSES/`, `docs/`, `art/`, `annotations/`,
+`*.toml` at project level. DO keep them — they cost nothing and help everyone.
+
+## When to copy what
+
+- Starting a new pack → copy the *shape* of `my_pack` (minimal + only needed folders).
+- Need items with behavior → look at `my_pack/items/*` + its scripts, then read
+  engine scripting docs before writing your own.
+- Need the game-shell around packs → that is a project; out of scope, see stub.
+- Need UI → Kompot's own docs (`docs/` inside fork_of_kompot) are the entry point.
+
+
+<!-- ===== docs/08-pitfalls.md ===== -->
+
+# 08. Pitfalls and Pre-flight Checklist
+
+Every entry below is a real failure mode — either documented upstream, thrown
+by the engine, or observed in real packs. Treat each AVOID as a hard rule.
+
+## Fatal mistakes
+
+1. **Editing `content.json`.** It is auto-generated and used to convert world
+   saves. Manual edits corrupt worlds irreversibly (upstream warning).
+   AVOID creating, editing, or deleting it in source repos.
+2. **Missing `package.json`.** A folder without it is not a pack — the scanner
+   skips it. DO always start from the manifest.
+3. **Invalid pack ID.** Outside `a-z0-9_`, starting with a digit, or shorter
+   than 2 / longer than 24 chars breaks registration. Reserved IDs (`res`,
+   `user`, `world`, `project`, `config`, `core`) are unavailable. `[VERIFIED]`
+4. **`texture-faces` with fewer than 6 entries.** The engine throws
+   "texture-faces requires 6 elements" and the pack fails to load.
+   `[OBSERVED: engine source]`
+5. **Using `texture` and `texture-faces` together.** Documented as incompatible;
+   pick one. `[DOC]`
+6. **Paths or extensions in texture names.** `"texture": "blocks/dirt.png"` is
+   wrong. The value is a NAME resolved inside an atlas: `"dirt"` or
+   `"blocks:dirt"` depending on context. `[VERIFIED]`
+7. **Using `base:*` properties without depending on `base`.** `base:durability`
+   and `base:loot` are registered by the `base` pack; without
+   `"dependencies": ["base"]` they are not guaranteed to exist. `[VERIFIED]`
+8. **Loot referencing a block instead of its item.** `base:loot[].item` needs an
+   ITEM id; a block's item is `<pack>:<block>.item`. `[VERIFIED]`
+
+## Likely-wrong assumptions (seen in practice)
+
+9. **Assuming folder name = pack ID.** The engine keys packs by the `"id"` in
+   `package.json`; the folder name is free-form and has NO meaning to the
+   engine. In real packs the folder name almost always DIFFERS from the ID
+   (e.g. folder `kompot_0f9103ff-1.2.2` ships `"id": "kompot"`), and exact
+   matches are rare. NEVER infer a pack's ID from its folder name — read the
+   manifest. `[OBSERVED]`
+10. **Assuming `icon.png` must be 128x128.** It is a recommendation; 64x64 and
+    210x208 exist in working packs. Keep it square. `[OBSERVED]`
+11. **Assuming texture sizes are enforced.** Stock uses 16x16; other sizes are
+    uncharted. DO stay 16x16 for blocks/items.
+12. **Assuming `version` matters for pack resolution.** When two sources carry
+    the same pack ID, priority decides; version is ignored. `[DOC]`
+13. **Assuming a pack needs content.** A folder containing ONLY `package.json`
+    is a complete, valid, loadable pack — nothing else is required. Blocks,
+    items, textures, config and code are all optional extras (Kompot ships no
+    blocks/items; confirmed first-hand). `[VERIFIED]`
+14. **Inventing dependency version operators.** Only `@>=x.y` and `*` are
+    documented. AVOID `<`, `<=`, `=`, ranges. `[DOC]`
+15. **Capitalizing captions yourself.** Docs recommend lowercase captions; the
+    engine upper-cases for display. Localization keys must match the lowercase
+    caption string. `[DOC]`
+16. **Preloading auto-loaded assets.** Block/item atlas textures are picked up
+    automatically; preloading them is noise (upstream warns to keep preload
+    minimal). `[DOC]`
+
+## JSON hygiene
+
+- AVOID trailing commas and comments — block/item files are strict JSON.
+- DO keep UTF-8 (localization values are non-ASCII routinely).
+- DO keep one definition per file; the file name is the content name.
+
+## Pre-flight checklist (run before delivering a pack)
+
+Manifest:
+- [ ] `package.json` exists, parses, has `id`/`title`/`version`.
+- [ ] `id` passes rules and is not reserved. Folder name is free-form — it
+      does NOT need to equal `id`.
+- [ ] `dependencies` lists every pack whose `pack:` references you use.
+
+Content:
+- [ ] Every `blocks/*.json` and `items/*.json` uses only properties documented
+      in 03/04 (or upstream docs) — nothing invented.
+- [ ] `texture-faces` arrays have exactly 6 entries in west/east/bottom/top/
+      north/south order.
+- [ ] No `texture` + `texture-faces` in the same block.
+- [ ] Every texture/icon name resolves to a real PNG in `textures/blocks/` or
+      `textures/items/`.
+- [ ] `base:*` properties used only with `base` dependency; loot items use
+      `.item` suffix where needed.
+
+Assets & config:
+- [ ] `icon.png` present at pack root (square).
+- [ ] `preload.json` (if present) contains only genuinely needed entries.
+- [ ] `texts/*.txt` keys match captions exactly (lowercase, spaces not
+      underscores).
+- [ ] No `content.json` committed from your side.
+
+Runtime:
+- [ ] Pack loads without errors in the engine log/console.
+- [ ] Blocks appear in the content/inventory screen and place correctly.
+- [ ] Loot drops, lights emit, plants sit on ground — as designed.
+
+## Debugging hints
+
+- Load errors are printed by the engine with the failing pack and file name
+  (e.g. unknown model, JSON parse errors, missing textures render as
+  `notfound`). Read the console output first. `[OBSERVED]`
+- A pack that loads but shows missing textures/`notfound` icons indicates a
+  name/folder mismatch (03/05 rules), not a manifest problem.
+- The in-game console and engine logging are documented upstream in
+  `doc/ru/console.md` — out of scope here.
+
+
+<!-- ===== docs/stubs/TODO-animations.md ===== -->
+
+# STUB — Animations (NOT COVERED YET)
+
+Status: **intentionally out of scope of this guide. TODO: write a full document.**
+
+What belongs here when written: character/rigging animation formats (VCA),
+block-model animations, asset animation entries in `preload.json`.
+
+Until this stub is replaced:
+
+- DO NOT guess animation API, file formats, or property names.
+- Authoritative sources instead:
+  - `<voxelcore repo>/doc/ru/animation.md` (RU only — not translated to EN)
+  - `<voxelcore repo>/doc/ru/vca.md`, `doc/ru/rigging.md`
+  - Real usage: `content/my_pack/animation/*.vca` + `preload.json` in
+    <https://github.com/George-Noise/wooden_meat_game>
+
+
+<!-- ===== docs/stubs/TODO-sounds.md ===== -->
+
+# STUB — Sounds & Audio (NOT COVERED YET)
+
+Status: **intentionally out of scope of this guide. TODO: write a full document.**
+
+What belongs here when written: `sounds/` folder formats (OGG etc.), sound name
+variants pattern, `audio.*` Lua API, positional/2D playback, audio in
+`preload.json`.
+
+Until this stub is replaced:
+
+- DO NOT guess sound file requirements or playback API.
+- What you MAY rely on from in-scope docs: block materials reference sound
+  names (`steps-sound`, `place-sound`, `break-sound`, `hit-sound` — see
+  `docs/05-textures-and-assets.md`), and `preload.json` `"sounds"` entries load
+  `name.ogg`, `name_1.ogg`, ... variants `[DOC]`.
+- Authoritative sources instead:
+  - `<voxelcore repo>/doc/ru/audio.md` (RU only — richer than EN)
+  - `<voxelcore repo>/doc/en/audio.md`
+  - Real usage: `content/sfx/` and `content/my_pack/sounds/` in
+    <https://github.com/George-Noise/wooden_meat_game>
+
+
+<!-- ===== docs/stubs/TODO-models.md ===== -->
+
+# STUB — 3D Models (NOT COVERED YET)
+
+Status: **intentionally out of scope of this guide. TODO: write a full document.**
+
+What belongs here when written: `models/` folder, VCM model format, OBJ usage,
+item models (`model-name` default `packid:itemname`), block custom models
+(`model: "custom"` + `model-name`), textures inside models (`blocks:name`
+references into the blocks atlas).
+
+Until this stub is replaced:
+
+- DO NOT guess model file formats or conversion tooling.
+- What you MAY rely on from in-scope docs: items accept `model-name`
+  (auto-generated when omitted) `[DOC]`; blocks accept `model: "custom"` +
+  `model-name` without `<pack>:models/` prefix or extension `[DOC]`; model
+  textures must be `blocks:<name>` `[DOC]`.
+- Authoritative sources instead:
+  - `<voxelcore repo>/doc/ru/block-models.md`, `doc/ru/vcm.md`
+  - Real usage: `content/my_pack/models/*.vcm|*.obj` in
+    <https://github.com/George-Noise/wooden_meat_game>
+
+
+<!-- ===== docs/stubs/TODO-entities.md ===== -->
+
+# STUB — Entities & Skeletons (NOT COVERED YET)
+
+Status: **intentionally out of scope of this guide. TODO: write a full document.**
+
+What belongs here when written: `entities/*.json` definitions, entity
+properties, `skeletons/*.json`, ECS components in `scripts/components/`,
+spawning from items (spawn-egg pattern).
+
+Until this stub is replaced:
+
+- DO NOT guess entity property names or the component API.
+- What you MAY rely on from in-scope docs: `config/defaults.toml` can bind
+  `player-entity` (stock: `"base:player"`) `[OBSERVED]`; blocks/items can
+  reference entities only through Lua (out of scope).
+- Authoritative sources instead:
+  - `<voxelcore repo>/doc/ru/entity-properties.md`
+  - `<voxelcore repo>/doc/ru/scripting.md` + `doc/ru/scripting/core_components.md`
+  - Real usage: `content/my_pack/entities/`, `skeletons/`, `scripts/components/`
+    in <https://github.com/George-Noise/wooden_meat_game>
+
+
+<!-- ===== docs/stubs/TODO-projects-worldgen.md ===== -->
+
+# STUB — Projects & World Generators (NOT COVERED YET)
+
+Status: **intentionally out of scope of this guide. TODO: write full documents.**
+
+Two related-but-separate topics were excluded:
+
+## Projects (`project.toml`)
+What belongs here: project manifests (`name`, `title`, `base_packs`,
+`permissions`), running with `--project <path>`, project-level scripts
+(`start.lua`, `project_client.lua`), `project:content` source.
+
+Known facts already documented in-scope: `project.toml` with `base_packs =
+["base", ...]` enables default packs `[OBSERVED]`; `project:content` has
+priority above `res:content` `[DOC]`.
+
+Authoritative sources: `<voxelcore repo>/doc/ru/projects.md` and real example
+<https://github.com/George-Noise/wooden_meat_game> (root `project.toml`).
+
+## World generators (`generators/`)
+What belongs here: generator TOML + scripting (`demo.toml`, `demo.files` in the
+stock pack), biome/ore/height configuration.
+
+Authoritative sources: `<voxelcore repo>/doc/ru/world-generator.md` (RU only —
+the largest engine doc, absent from EN set).
+
+Until these stubs are replaced:
+
+- DO NOT guess project flags or generator TOML fields.
+- A typical ADD-ON content pack needs neither — a pack is usable from the
+  content menu of any world.
