@@ -90,15 +90,18 @@ Takeaways (all `[OBSERVED]`):
   `models/shotgun.obj`.
 - `items/spawn_nepis.json` has only `icon-type`+`icon` — the rest of behavior
   lives in `scripts/spawn_nepis.lua` (handler `on_use(pid)`, spawns an entity).
-- `preload.json` preloads only non-auto assets: animations, one sound, two
-  effect textures (see 05).
+- `preload.json` preloads only non-auto assets, with keys `animation` (NOTE the
+  singular spelling — engine constant), `sounds`, `textures`: two animations,
+  one sound, two effect textures (see 05).
 - Note the absence of `blocks/` — a pack is NOT required to define blocks.
 
 ## fork_of_kompot — a pack distributing a Lua framework
 
 Kompot is a declarative-UI framework pack ("Jetpack-Compose-like") distributed
-AS a content pack. UI is an excluded topic (docs/stubs TODO-xml-ui / Lua UI);
-this section extracts only pack-structure lessons. `[OBSERVED]` throughout.
+AS a content pack. Kompot's own framework internals stay out of scope, but the
+engine-side HUD/UI mechanics its files use (`scripts/hud.lua`, `layouts/`,
+`config/bindings.toml`) are now covered in 09-hud-and-ui.md. `[OBSERVED]`
+throughout.
 
 ```text
 fork_of_kompot/
@@ -106,8 +109,8 @@ fork_of_kompot/
 ├── icon.png
 ├── preload.json            # 28 font entries + 2 custom atlases
 ├── modules/                # Lua libraries: modules/kompot.lua + modules/kompot/...
-├── scripts/hud.lua         # content script
-├── layouts/                # gallery.xml + gallery.xml.lua (layout + companion script)
+├── scripts/hud.lua         # HUD entry script — on_hud_open() (see 09)
+├── layouts/                # gallery.xml + gallery.xml.lua (layout + companion script, see 09)
 ├── config/bindings.toml    # [kompot] gallery = "key:f12"
 ├── texts/                  # en_US.txt, ru_RU.txt — incl. dotted keys
 ├── fonts/                  # IBM Plex TTFs (out of scope)

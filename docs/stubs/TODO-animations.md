@@ -3,7 +3,8 @@
 Status: **intentionally out of scope of this guide. TODO: write a full document.**
 
 What belongs here when written: character/rigging animation formats (VCA),
-block-model animations, asset animation entries in `preload.json`.
+block-model animations, asset animation entries in `preload.json` (the key is
+spelled `"animation"`, singular — verified in engine source).
 
 Until this stub is replaced:
 

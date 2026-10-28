@@ -33,9 +33,9 @@ rules, exact file formats, copy-pasteable examples, and explicit trust labels.
 4. **Never invent API fields.** If a property you need is not documented here, do
    not guess its name or type. Check `docs/stubs/` — the topic may be intentionally
    out of scope. If it is not covered anywhere, say "unknown" instead of guessing.
-5. **Scope is limited.** This guide covers pack basics, blocks, items, textures and
-   related config. Animations, sounds, models, entities and projects are NOT
-   covered (see `docs/stubs/`).
+5. **Scope is limited.** This guide covers pack basics, blocks, items, textures,
+   HUD/UI pack basics and related config. Animations, sounds, models, entities
+   and projects are NOT covered (see `docs/stubs/`).
 
 ## Scope
 
@@ -46,12 +46,14 @@ rules, exact file formats, copy-pasteable examples, and explicit trust labels.
 | Block definitions (JSON)                 | 3D models (VCM/OBJ)       |
 | Item definitions (JSON)                  | Entities & skeletons      |
 | Textures, atlases, icons, localization   | World generators          |
-| `preload.json`, `config/*.toml` basics   | XML UI layouts / Lua UI   |
-| End-to-end walkthrough of a minimal pack | Lua scripting API details |
+| HUD/UI basics: `layouts/`, pages, overlays | Lua GUI API internals    |
+| `preload.json`, `config/*.toml` basics   | Full XML UI element ref.  |
+| End-to-end walkthrough of a minimal pack |                           |
 
-Lua scripting is mentioned only where pack files reference scripts. For the full
-Lua API read the engine's own docs: `doc/ru/scripting.md` and
-`doc/ru/scripting/` in the VoxelCore repository.
+Lua appears only in minimal, pack-file-level snippets (HUD scripts, bindings);
+the general Lua API is out of scope. For the full Lua API read the engine's own
+docs: `doc/en/scripting.md` and `doc/en/scripting/` in the VoxelCore repository
+(mirrored under `doc/ru/`, which is richer).
 
 ## Document index
 

@@ -5,8 +5,8 @@
 > folder layout, block/item JSON formats, textures, preload and config files,
 > with a step-by-step minimal pack walkthrough and annotated real-world
 > examples. Written in imperative DO/AVOID style with trust labels
-> (VERIFIED / DOC / OBSERVED). Scope: declarative content only — animations,
-> sounds, models, entities, projects and worldgen are stub-only.
+> (VERIFIED / DOC / OBSERVED). Scope: declarative content plus HUD/UI basics —
+> animations, sounds, models, entities, projects and worldgen are stub-only.
 
 Start here for the reader contract, trust labels and usage patterns:
 
@@ -19,6 +19,7 @@ Core reference:
 - [03 Blocks Reference](docs/03-blocks.md): every documented block property, texture-faces face order, real annotated stock-pack examples
 - [04 Items Reference](docs/04-items.md): item properties, icons, generated block items, tags, script boundary
 - [05 Textures and Assets](docs/05-textures-and-assets.md): blocks/items atlases, icon.png, preload.json, block materials, localization
+- [09 HUD and UI Basics](docs/09-hud-and-ui.md): layouts/, scripts/hud.lua, menu pages (menu.page), overlays (hud.show_overlay), image src addressing
 - [08 Pitfalls and Checklist](docs/08-pitfalls.md): fatal mistakes, wrong assumptions, pre-flight checklist, debugging hints
 
 Applied:

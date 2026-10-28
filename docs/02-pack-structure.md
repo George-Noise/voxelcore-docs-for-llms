@@ -119,10 +119,10 @@ my_pack/
 ├── sounds/                 # OUT OF SCOPE (stub)
 ├── shaders/                # OUT OF SCOPE
 ├── fonts/                  # OUT OF SCOPE
-├── animations/             # OUT OF SCOPE (stub)
-├── layouts/                # OUT OF SCOPE (stub: XML UI)
+├── animation/              # OUT OF SCOPE (stub) — singular spelling, NOT "animations"
+├── layouts/                # IN SCOPE (HUD/UI basics) — 09-hud-and-ui.md
 ├── generators/             # OUT OF SCOPE (stub: worldgen)
-├── scripts/                # OUT OF SCOPE (Lua) — referenced by blocks/items
+├── scripts/                # OUT OF SCOPE (Lua) — EXCEPT scripts/hud.lua (09)
 ├── modules/                # OUT OF SCOPE (Lua libraries)
 ├── presets/                # OUT OF SCOPE
 ├── devtools/               # OUT OF SCOPE

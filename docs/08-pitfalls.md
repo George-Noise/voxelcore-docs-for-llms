@@ -53,6 +53,15 @@ by the engine, or observed in real packs. Treat each AVOID as a hard rule.
 16. **Preloading auto-loaded assets.** Block/item atlas textures are picked up
     automatically; preloading them is noise (upstream warns to keep preload
     minimal). `[DOC]`
+17. **Putting `pack_id:` into `<image src>` or `menu.page`.** These do NOT use
+    the pack namespace: `src` without a colon is a global texture name; `src`
+    with a colon is `atlas_name:tile_name`; `menu.page` takes a bare page name
+    scanned across all packs. Pack-qualified ids belong only to layout ids
+    (`hud.show_overlay("pack:layout")`) and document paths
+    (`gui.load_document`). See 09-hud-and-ui.md. `[VERIFIED]`
+18. **Spelling the animation folder or preload key `animations`.** The engine
+    constant is `animation` (singular): pack folder `animation/`, `preload.json`
+    key `"animation"`. An upstream quirk you must reproduce. `[VERIFIED]`
 
 ## JSON hygiene
 
@@ -86,6 +95,12 @@ Assets & config:
       underscores).
 - [ ] No `content.json` committed from your side.
 
+UI (09):
+- [ ] Layout XMLs sit at `layouts/*.xml` (flat folder); menu pages at
+      `layouts/pages/`.
+- [ ] No pack id in `menu.page` names or in `<image src>` values.
+- [ ] Animation folder/key spelled `animation` (singular), if used.
+
 Runtime:
 - [ ] Pack loads without errors in the engine log/console.
 - [ ] Blocks appear in the content/inventory screen and place correctly.
@@ -98,5 +113,5 @@ Runtime:
   `notfound`). Read the console output first. `[OBSERVED]`
 - A pack that loads but shows missing textures/`notfound` icons indicates a
   name/folder mismatch (03/05 rules), not a manifest problem.
-- The in-game console and engine logging are documented upstream in
-  `doc/ru/console.md` — out of scope here.
+- The in-game console and engine logging are documented in the engine repo
+  (`doc/ru/console.md`, mirrored as `doc/en/console.md`) — out of scope here.
