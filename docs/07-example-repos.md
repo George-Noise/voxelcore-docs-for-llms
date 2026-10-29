@@ -1,5 +1,13 @@
 # 07. Annotated Breakdown of Real Repositories
 
+> **MANDATORY PREREQUISITES — DO NOT SKIP.** This file assumes you have read
+> [01-engine-overview.md](01-engine-overview.md) AND
+> [08-pitfalls.md](08-pitfalls.md). 01 defines the ID rules, reserved names
+> and trust labels this file relies on; 08 lists the real failure modes
+> behind every DO/AVOID note. Skipping either is the most common reason
+> models generate broken packs from this guide. If you received only this
+> file, fetch and read both before writing any code.
+
 Two real-world repositories are referenced by this guide. Read this file to map
 their structure onto the concepts, and to know which of their folders are OUT OF
 SCOPE of this guide.
@@ -39,13 +47,13 @@ permissions = []
 
 ### Packs inside content/
 
-| Folder                      | id in package.json | Lesson                                              |
-| --------------------------- | ------------------ | --------------------------------------------------- |
-| `kompot_0f9103ff-1.2.2/`    | `kompot`           | **Folder name ≠ pack ID** — engine reads the ID from package.json `[OBSERVED]` |
-| `my_pack/`                  | `my_pack`          | Title differs from id: "Simple Box and Gun" — fine  |
-| `sfx/`                      | `vd_ambient_sfx`   | Folder `sfx`, id `vd_ambient_sfx` — again ≠         |
-| `vd_belt_system/`           | `vd_belt_system`   | Conventional 1:1 naming (recommended default)       |
-| `wooden_meat_menu/`         | `wooden_meat_menu` | Declares `"dependencies": ["kompot"]` `[OBSERVED]`  |
+| Folder | id in package.json | Lesson |
+| --- | --- | --- |
+| `kompot_0f9103ff-1.2.2/` | `kompot` | **Folder name ≠ pack ID** — engine reads the ID from package.json `[OBSERVED]` |
+| `my_pack/` | `my_pack` | Title differs from id: "Simple Box and Gun" — fine |
+| `sfx/` | `vd_ambient_sfx` | Folder `sfx`, id `vd_ambient_sfx` — again ≠ |
+| `vd_belt_system/` | `vd_belt_system` | Conventional 1:1 naming (recommended default) |
+| `wooden_meat_menu/` | `wooden_meat_menu` | Declares `"dependencies": ["kompot"]` `[OBSERVED]` |
 
 Vendored-pack naming (`kompot_<hash>-<version>`) is a human-organization trick;
 the engine only sees id `kompot`.
@@ -65,9 +73,10 @@ my_pack/
 │   └── items/              # shotgun.png, nepis.png, turret.png → items atlas
 ├── preload.json
 ├── scripts/ ...            # Lua event handlers (out of scope)
-├── entities/ ...           # out of scope
+├── entities/ ...           # IN SCOPE — see 10-entities.md
 ├── models/ ...             # out of scope
-├── animation/, skeletons/, sounds/   # out of scope
+├── animation/              # IN SCOPE — hit.vca, rip.vca (see 11-animation.md)
+├── sounds/                 # IN SCOPE — shotgun.ogg (see 12-sounds.md)
 ```
 
 `package.json` has no `dependencies` yet references only its own content —
@@ -77,10 +86,10 @@ correct, because it does not use `base:*` properties.
 
 ```json
 {
-  "icon-type": "sprite",
-  "icon": "items:shotgun",
-  "stack-size": 1,
-  "model-name": "shotgun"
+    "icon-type": "sprite",
+    "icon": "items:shotgun",
+    "stack-size": 1,
+    "model-name": "shotgun"
 }
 ```
 
@@ -89,10 +98,12 @@ Takeaways (all `[OBSERVED]`):
 - `stack-size: 1` for a weapon; `model-name: "shotgun"` pulls
   `models/shotgun.obj`.
 - `items/spawn_nepis.json` has only `icon-type`+`icon` — the rest of behavior
-  lives in `scripts/spawn_nepis.lua` (handler `on_use(pid)`, spawns an entity).
+  lives in `scripts/spawn_nepis.lua` (handler `on_use_on_block(...)` calls
+  `entities.spawn`; the full spawn-egg pattern is covered in 10-entities.md).
 - `preload.json` preloads only non-auto assets, with keys `animation` (NOTE the
-  singular spelling — engine constant), `sounds`, `textures`: two animations,
-  one sound, two effect textures (see 05).
+  singular spelling — engine constant), `sounds`, `textures`: two animations
+  (dissected in 11-animation.md), one sound (see 12-sounds.md), two effect
+  textures (see 05).
 - Note the absence of `blocks/` — a pack is NOT required to define blocks.
 
 ## fork_of_kompot — a pack distributing a Lua framework

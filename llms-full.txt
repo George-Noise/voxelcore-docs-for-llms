@@ -21,42 +21,59 @@ rules, exact file formats, copy-pasteable examples, and explicit trust labels.
 ## How to use this repo with an LLM
 
 - **Chat models (DeepSeek, ChatGPT, Claude, ...)**: paste the whole `llms-full.txt`
-  into the conversation, or paste the individual `docs/*.md` files you need.
+  into the conversation, or paste the individual `docs/*.md` files you need —
+  ALWAYS including `docs/01-engine-overview.md` and `docs/08-pitfalls.md`
+  (mandatory for every task; see the reader contract).
 - **Coding agents (with repo/file access)**: point the agent to this repository and
-  instruct it to read `llms.txt` first, then follow links it needs.
+  instruct it to read `llms.txt` first, then follow links it needs. Explicitly
+  instruct it to read `docs/01-engine-overview.md` and `docs/08-pitfalls.md`
+  before writing any pack code — agents tend to skip exactly these two files
+  and then produce broken packs.
 - **Automated ingestion**: `llms.txt` follows the [llms.txt](https://llmstxt.org)
   convention; `llms-full.txt` is the concatenated full text of all docs.
 
 ## Reader contract (LLMs: follow literally)
 
 1. **Read `llms.txt` first.** It is the index. Pick only the sections you need.
-2. **Trust labels**. Facts are tagged so you know how reliable they are:
+2. **Mandatory reading — no exceptions.** `docs/01-engine-overview.md` and
+   `docs/08-pitfalls.md` are REQUIRED for every task, regardless of which other
+   files you read. 01 defines the ID rules and trust-label system every other
+   file depends on; 08 lists the real failure modes behind every DO/AVOID.
+   Models that skip these two are the #1 source of broken pack code. This
+   requirement is repeated at the top of every docs file — do not ignore it
+   there either.
+3. **Trust labels**. Facts are tagged so you know how reliable they are:
    - `[VERIFIED]` — confirmed by official docs AND a real working pack.
    - `[DOC]` — stated in official docs, not observed in example packs.
    - `[OBSERVED]` — works in a real pack (engine's own pack or a published game),
      but absent from official docs. Use carefully; semantics may change.
    - Unlabeled statements are general context, not API contracts.
-3. **DO / AVOID**. Instructions marked `DO` are requirements. Instructions marked
+4. **DO / AVOID**. Instructions marked `DO` are requirements. Instructions marked
    `AVOID` describe failure modes that actually break packs. Do not "improve" them.
-4. **Never invent API fields.** If a property you need is not documented here, do
+5. **Never invent API fields.** If a property you need is not documented here, do
    not guess its name or type. Check `docs/stubs/` — the topic may be intentionally
    out of scope. If it is not covered anywhere, say "unknown" instead of guessing.
-5. **Scope is limited.** This guide covers pack basics, blocks, items, textures,
-   HUD/UI pack basics and related config. Animations, sounds, models, entities
-   and projects are NOT covered (see `docs/stubs/`).
+6. **Scope is limited.** This guide covers pack basics, blocks, items, textures,
+   HUD/UI pack basics, entity basics, animations (VCA), sounds & audio,
+   models (VCM/OBJ) and related config. Projects and worldgen are NOT
+   covered (see `docs/stubs/`).
 
 ## Scope
 
-| Covered                                  | Excluded (stub only)      |
-| ---------------------------------------- | ------------------------- |
-| Content pack structure, `package.json`   | Animations                |
-| Content sources, loading, dependencies   | Sounds & audio            |
-| Block definitions (JSON)                 | 3D models (VCM/OBJ)       |
-| Item definitions (JSON)                  | Entities & skeletons      |
-| Textures, atlases, icons, localization   | World generators          |
-| HUD/UI basics: `layouts/`, pages, overlays | Lua GUI API internals    |
-| `preload.json`, `config/*.toml` basics   | Full XML UI element ref.  |
-| End-to-end walkthrough of a minimal pack |                           |
+| Covered | Excluded (stub only) |
+| --- | --- |
+| Content pack structure, `package.json` |  |
+| Content sources, loading, dependencies |  |
+| Block definitions (JSON) | World generators |
+| Item definitions (JSON) | Lua GUI API internals |
+| Textures, atlases, icons, localization | Bone rigging internals |
+| HUD/UI basics: `layouts/`, pages, overlays | Full XML UI element ref. |
+| Entity basics: `entities/`, `skeletons/`, spawning, components |  |
+| Animations (VCA): preload, `animation.play`, `core:animator` |  |
+| Sounds & audio: preload and variants, `play_sound`/`play_stream`, channels, material sounds, runtime PCM generation |  |
+| Models (VCM/OBJ): `models/` folder, VCM format, block custom models, item models, VCM bones |  |
+| `preload.json`, `config/*.toml` basics |  |
+| End-to-end walkthrough of a minimal pack |  |
 
 Lua appears only in minimal, pack-file-level snippets (HUD scripts, bindings);
 the general Lua API is out of scope. For the full Lua API read the engine's own
@@ -65,17 +82,23 @@ docs: `doc/en/scripting.md` and `doc/en/scripting/` in the VoxelCore repository
 
 ## Document index
 
-| File                                            | Content                                                       |
-| ----------------------------------------------- | ------------------------------------------------------------- |
+| File | Content |
+| --- | --- |
 | [docs/01-engine-overview.md](docs/01-engine-overview.md) | What VoxelCore is, terminology, ID rules, how content loads |
-| [docs/02-pack-structure.md](docs/02-pack-structure.md)   | `package.json`, folder layout, content sources, config files |
-| [docs/03-blocks.md](docs/03-blocks.md)                   | Block JSON reference with real annotated examples            |
-| [docs/04-items.md](docs/04-items.md)                     | Item JSON reference with real annotated examples             |
+| [docs/02-pack-structure.md](docs/02-pack-structure.md) | `package.json`, folder layout, content sources, config files |
+| [docs/03-blocks.md](docs/03-blocks.md) | Block JSON reference with real annotated examples |
+| [docs/04-items.md](docs/04-items.md) | Item JSON reference with real annotated examples |
 | [docs/05-textures-and-assets.md](docs/05-textures-and-assets.md) | Texture atlases, icons, `preload.json`, materials, localization |
-| [docs/06-walkthrough.md](docs/06-walkthrough.md)         | Build a complete minimal pack step by step                   |
-| [docs/07-example-repos.md](docs/07-example-repos.md)     | Annotated breakdown of two real-world repositories           |
-| [docs/08-pitfalls.md](docs/08-pitfalls.md)               | Common mistakes and a pre-flight checklist                   |
-| [docs/stubs/](docs/stubs/)                               | TODO stubs for intentionally excluded topics                 |
+| [docs/06-walkthrough.md](docs/06-walkthrough.md) | Build a complete minimal pack step by step |
+| [docs/07-example-repos.md](docs/07-example-repos.md) | Annotated breakdown of two real-world repositories |
+| [docs/08-pitfalls.md](docs/08-pitfalls.md) | Common mistakes and a pre-flight checklist |
+| [docs/09-hud-and-ui.md](docs/09-hud-and-ui.md) | HUD/UI pack basics: layouts, overlays, menu pages, documents |
+| [docs/10-entities.md](docs/10-entities.md) | Entity definitions, skeletons, spawning, minimal components |
+| [docs/11-animation.md](docs/11-animation.md) | VCA format, preload and naming, playback, core:animator |
+| [docs/12-sounds.md](docs/12-sounds.md) | Sound preload and variants, play_sound/play_stream, channels, speaker control, material sounds |
+| [docs/13-sound-creation.md](docs/13-sound-creation.md) | Runtime audio generation: PCMStream, share/create_sound, mic input |
+| [docs/14-models.md](docs/14-models.md) | `models/` folder, VCM format and primitives, bones, OBJ subset, block/item custom models |
+| [docs/stubs/](docs/stubs/) | TODO stubs for intentionally excluded topics |
 
 ## Sources and reliability of this guide
 
@@ -107,6 +130,12 @@ may change between engine versions without notice.
 
 Read this file first. It defines the terminology used by every other document.
 
+> **MANDATORY PAIR — DO NOT SKIP.** This file is only half of the required
+> foundation: you MUST also read [08-pitfalls.md](08-pitfalls.md) before
+> authoring any pack — it lists the real failure modes behind the DO/AVOID
+> notes in every other document. If you received only this file, fetch and
+> read it too.
+
 ## What VoxelCore is
 
 VoxelCore (repo: <https://github.com/MihailRis/voxelcore>) is an open-source voxel
@@ -120,16 +149,16 @@ JSON properties are not enough.
 
 ## Core terminology
 
-| Term            | Meaning                                                                 |
-| --------------- | ----------------------------------------------------------------------- |
-| Content pack    | A folder containing `package.json` and optional content subfolders.     |
-| Pack ID         | The unique identifier declared in `package.json` (`"id"` field).        |
-| Block           | A voxel type occupying grid cells in the world (stone, water, torch...).|
-| Item            | An inventory object. Every block automatically gets a corresponding item.|
-| Content source  | A filesystem path the engine scans for packs (see 02-pack-structure.md).   |
-| Mount point     | Internal virtual filesystem entry; each pack gets one named after its ID.|
-| Atlas           | A texture collection. Atlases `blocks` and `items` are built from PNGs in the pack's `textures/blocks/` and `textures/items/`. |
-| Caption         | Human-readable display name of a block/item shown in the inventory UI.  |
+| Term | Meaning |
+| --- | --- |
+| Content pack | A folder containing `package.json` and optional content subfolders. |
+| Pack ID | The unique identifier declared in `package.json` (`"id"` field). |
+| Block | A voxel type occupying grid cells in the world (stone, water, torch...). |
+| Item | An inventory object. Every block automatically gets a corresponding item. |
+| Content source | A filesystem path the engine scans for packs (see 02-pack-structure.md). |
+| Mount point | Internal virtual filesystem entry; each pack gets one named after its ID. |
+| Atlas | A texture collection. Atlases `blocks` and `items` are built from PNGs in the pack's `textures/blocks/` and `textures/items/`. |
+| Caption | Human-readable display name of a block/item shown in the inventory UI. |
 
 ## Namespaced IDs
 
@@ -180,12 +209,15 @@ first-hand, nothing else is required. Everything else is optional subfolders:
   09-hud-and-ui.md
 - `package.json`, `icon.png`, `preload.json` — covered in 02-pack-structure.md
 - `content.json` — auto-generated by the engine. NEVER create or edit it by hand.
-- Excluded topics (defined but NOT documented in this guide): `entities/`,
-  `skeletons/`, `models/`, `sounds/`, `shaders/`, `fonts/`, `generators/`,
-  `scripts/` (except `hud.lua`), `modules/`, `presets/`, `animation/`. See
-  `docs/stubs/` before assuming anything about them. NOTE: the animation folder
-  is spelled `animation` (singular) — an upstream quirk baked into the engine
-  constant; do NOT "fix" it to `animations`. `[VERIFIED: engine source]`
+- `entities/`, `skeletons/`, `animation/` — entity definitions, render
+  skeletons and VCA animation tracks — covered in 10-entities.md and
+  11-animation.md. NOTE: the animation folder is spelled `animation`
+  (singular) — an upstream quirk baked into the engine constant; do NOT
+  "fix" it to `animations`. `[VERIFIED: engine source]`
+- Excluded topics (defined but NOT documented in this guide): `models/`,
+  `sounds/`, `shaders/`, `fonts/`, `generators/`, `scripts/` (except
+  `hud.lua`), `modules/`, `presets/`. See `docs/stubs/` before assuming
+  anything about them.
 
 ## How loading works (mental model)
 
@@ -225,6 +257,14 @@ authoritative example set — DO re-check it when in doubt.
 
 # 02. Pack Structure and Manifest
 
+> **MANDATORY PREREQUISITES — DO NOT SKIP.** This file assumes you have read
+> [01-engine-overview.md](01-engine-overview.md) AND
+> [08-pitfalls.md](08-pitfalls.md). 01 defines the ID rules, reserved names
+> and trust labels this file relies on; 08 lists the real failure modes
+> behind every DO/AVOID note. Skipping either is the most common reason
+> models generate broken packs from this guide. If you received only this
+> file, fetch and read both before writing any code.
+
 This document defines where packs live, what `package.json` must contain, and
 which auxiliary files a pack may have.
 
@@ -234,12 +274,12 @@ The engine discovers packs in **content sources**, scanned in priority order
 (highest first). If the same pack ID exists in several sources, the
 highest-priority one wins and the rest are ignored. `[VERIFIED]`
 
-| Priority | Source           | Path                                        |
-| -------- | ---------------- | ------------------------------------------- |
-| 1        | `world:content`  | `<world folder>/content/`                   |
-| 2        | `user:content`   | `$HOME/.voxeng/content/`                    |
-| 3        | `project:content`| `<project folder>/content/` (project mode)  |
-| 4        | `res:content`    | `<engine>/res/content/` (built-in packs)    |
+| Priority | Source | Path |
+| --- | --- | --- |
+| 1 | `world:content` | `<world folder>/content/` |
+| 2 | `user:content` | `$HOME/.voxeng/content/` |
+| 3 | `project:content` | `<project folder>/content/` (project mode) |
+| 4 | `res:content` | `<engine>/res/content/` (built-in packs) |
 
 Practical guidance:
 
@@ -274,15 +314,15 @@ name works.
 }
 ```
 
-| Field          | Required | Format / notes                                                |
-| -------------- | -------- | ------------------------------------------------------------- |
-| `id`           | yes      | Pack ID, rules in 01-engine-overview.md                        |
-| `title`        | yes*     | Display name in the content menu                               |
-| `version`      | yes*     | `major.minor[.patch]`, e.g. `"1.0"`, `"0.32"`                  |
-| `creator`      | no       | Author name; OR use an array field `creators` instead `[DOC]`  |
-| `description`  | no       | Short free-form text                                           |
-| `dependencies` | no       | Array of dependency strings (see below)                        |
-| `license`      | no       | Observed in real packs (`"license": "MPL-2.0"`); engine ignores unknown fields `[OBSERVED]` |
+| Field | Required | Format / notes |
+| --- | --- | --- |
+| `id` | yes | Pack ID, rules in 01-engine-overview.md |
+| `title` | yes* | Display name in the content menu |
+| `version` | yes* | `major.minor[.patch]`, e.g. `"1.0"`, `"0.32"` |
+| `creator` | no | Author name; OR use an array field `creators` instead `[DOC]` |
+| `description` | no | Short free-form text |
+| `dependencies` | no | Array of dependency strings (see below) |
+| `license` | no | Observed in real packs (`"license": "MPL-2.0"`); engine ignores unknown fields `[OBSERVED]` |
 
 \* Official docs show `title`/`version` in every example; packs without them are
 unknown territory. DO always include `id`, `title`, `version`.
@@ -291,11 +331,11 @@ unknown territory. DO always include `id`, `title`, `version`.
 
 Each dependency string is `[prefix]pack_id[@version_spec]`:
 
-| Prefix | Meaning      | Behavior                                                        |
-| ------ | ------------ | --------------------------------------------------------------- |
-| `!` or none | required | Pack fails to load without it (this is the default) `[DOC]`     |
-| `?`    | optional     | Loaded if present, ignored otherwise                            |
-| `~`    | weak         | Order-only / best-effort (documented as "weak dependency")      |
+| Prefix | Meaning | Behavior |
+| --- | --- | --- |
+| `!` or none | required | Pack fails to load without it (this is the default) `[DOC]` |
+| `?` | optional | Loaded if present, ignored otherwise |
+| `~` | weak | Order-only / best-effort (documented as "weak dependency") |
 
 Version spec operators exist (e.g. `>=1.0`, `*` = any, which is the default).
 Only `>=` is shown by official docs; AVOID inventing other operators (`<`, `=`)
@@ -338,13 +378,13 @@ my_pack/
 ├── preload.json            # IN SCOPE  — 05-textures-and-assets.md
 ├── config/                 # partially in scope — see below
 ├── content.json            # AUTO-GENERATED. NEVER hand-edit, NEVER create.
-├── entities/               # OUT OF SCOPE (stub)
-├── skeletons/              # OUT OF SCOPE (stub)
+├── entities/               # IN SCOPE  — 10-entities.md
+├── skeletons/              # IN SCOPE  — 10-entities.md (basics)
 ├── models/                 # OUT OF SCOPE (stub)
-├── sounds/                 # OUT OF SCOPE (stub)
+├── sounds/                 # IN SCOPE — 12-sounds.md
 ├── shaders/                # OUT OF SCOPE
 ├── fonts/                  # OUT OF SCOPE
-├── animation/              # OUT OF SCOPE (stub) — singular spelling, NOT "animations"
+├── animation/              # IN SCOPE — 11-animation.md (singular, NOT "animations")
 ├── layouts/                # IN SCOPE (HUD/UI basics) — 09-hud-and-ui.md
 ├── generators/             # OUT OF SCOPE (stub: worldgen)
 ├── scripts/                # OUT OF SCOPE (Lua) — EXCEPT scripts/hud.lua (09)
@@ -410,6 +450,14 @@ my_pack/
 
 # 03. Blocks Reference
 
+> **MANDATORY PREREQUISITES — DO NOT SKIP.** This file assumes you have read
+> [01-engine-overview.md](01-engine-overview.md) AND
+> [08-pitfalls.md](08-pitfalls.md). 01 defines the ID rules, reserved names
+> and trust labels this file relies on; 08 lists the real failure modes
+> behind every DO/AVOID note. Skipping either is the most common reason
+> models generate broken packs from this guide. If you received only this
+> file, fetch and read both before writing any code.
+
 Block definitions are JSON files in `blocks/` of the pack. The file name defines
 the content name: `blocks/dirt.json` in pack `base` becomes `base:dirt`.
 `[VERIFIED]` ID rules: see 01-engine-overview.md.
@@ -454,14 +502,14 @@ Texture NAME only: no path, no `.png` extension. The PNG must be in the pack's
 
 Array of exactly 6 texture names, order:
 
-| Index | Face        | Direction |
-| ----- | ----------- | --------- |
-| 0     | west        | −X        |
-| 1     | east        | +X        |
-| 2     | bottom      | −Y        |
-| 3     | top         | +Y        |
-| 4     | north       | −Z        |
-| 5     | south       | +Z        |
+| Index | Face | Direction |
+| --- | --- | --- |
+| 0 | west | −X |
+| 1 | east | +X |
+| 2 | bottom | −Y |
+| 3 | top | +Y |
+| 4 | north | −Z |
+| 5 | south | +Z |
 
 `[VERIFIED]` against engine face constants (`FACE_MX, FACE_PX, FACE_MY, FACE_PY,
 FACE_MZ, FACE_PZ` in `src/voxels/Block.hpp`) and the stock `grass_block.json`.
@@ -479,22 +527,46 @@ atlas reference (`atlas:name`). Not documented upstream. `[OBSERVED]`
 
 ### `model` — built-in model type
 
-| Value    | Behavior                                                              |
-| -------- | --------------------------------------------------------------------- |
-| `block`  | Default full cube (default for all blocks)                             |
-| `none`   | Invisible block (air-like)                                             |
-| `X`      | Two crossed sprites — grass/flowers style (see `flower.json` example)  |
-| `aabb`   | Mesh matches the block hitbox (pipes, torch, doors, lamps)             |
-| `custom` | Requires `model-name` (custom model file) — OUT OF SCOPE, see stubs    |
+| Value | Behavior |
+| --- | --- |
+| `block` | Default full cube (default for all blocks) |
+| `none` | Invisible block (air-like) |
+| `X` | Two crossed sprites — grass/flowers style (see `flower.json` example) |
+| `aabb` | Mesh matches the block hitbox (pipes, torch, doors, lamps) |
+| `custom` | The ONLY value that makes the engine read `model-name` — OUT OF SCOPE, see stubs |
 
 `[VERIFIED]`
 
 ### `model-name` — custom model file
 
-Value is a model name without the `<pack>:models/` prefix and without extension.
-Custom models are an excluded topic (docs/stubs/TODO-models.md). Textures used
-inside custom models must live in the `blocks` atlas and be referenced as
-`blocks:name`. `[DOC]`
+`model-name` is read ONLY and ONLY when `"model": "custom"` is set. With any
+other `model` value (`block`, `none`, `X`, `aabb`) or with no `model` field at
+all, `model-name` is silently ignored — do not add it "just in case".
+`[VERIFIED: user first-hand]`
+
+Real example — `content/vd_belt_system/blocks/destroyer_belt.json` from
+[wooden_meat_game](https://github.com/George-Noise/wooden_meat_game), verbatim:
+
+```json
+{
+    "caption": "Destroyer Belt",
+    "texture": "box",
+    "model": "custom",
+    "model-name": "destroyer_belt",
+    "rotation": "pane",
+    "hitbox": [0, 0, 0, 1, 0.5, 1],
+    "light-passing": true,
+    "sky-light-passing": true,
+    "material": "base:metal"
+}
+```
+
+The value is a model name without the `<pack>:models/` prefix and without
+extension (in the example above the model file is
+`vd_belt_system/models/destroyer_belt.*`). Custom models are covered in
+14-models.md. Textures inside custom models resolve as `$0`..`$5` (the
+block's texture-faces), `blocks:name` (blocks atlas) or bare names
+(standalone `textures/<name>` files). `[DOC]`
 
 ### `draw-group` — integer
 
@@ -528,13 +600,13 @@ Vertex ambient occlusion toggle. `[VERIFIED]`
 
 ### `rotation` — placement rotation profile
 
-| Value     | For blocks like            |
-| --------- | -------------------------- |
-| `none`    | default; no rotation       |
-| `pipe`    | logs, pipes, torches (axis alignment) |
-| `pane`    | panels, doors, signs (flat alignment) |
-| `stairs`  | stairs (`pane` + upside-down variants) |
-| `ladder`  | ladders (`pipe` on vertical + `pane` on horizontal surfaces) |
+| Value | For blocks like |
+| --- | --- |
+| `none` | default; no rotation |
+| `pipe` | logs, pipes, torches (axis alignment) |
+| `pane` | panels, doors, signs (flat alignment) |
+| `stairs` | stairs (`pane` + upside-down variants) |
+| `ladder` | ladders (`pipe` on vertical + `pane` on horizontal surfaces) |
 
 `[DOC]` Real usage: `wood.json` and `torch.json` use `"rotation": "pipe"`,
 `wooden_door.json` uses `"pane"`. `[OBSERVED]`
@@ -750,6 +822,8 @@ equivalents and check the stock pack again when the engine updates.
 - DO use `"model": "X"` + `obstacle:false` + `replaceable:true` + `grounded:true` + `draw-group:1` for plants.
 - DO reference block-derived items with the `.item` suffix in loot/pick properties.
 - AVOID combining `texture` with `texture-faces` in one block.
+- AVOID adding `model-name` to a block whose `model` is not `"custom"` — the
+  field is ignored there and only misleads readers.
 - AVOID `translucent` unless you need alpha blending (prefer `draw-group` + `light-passing`).
 - AVOID inventing property names; everything allowed is listed above or in upstream docs.
 - AVOID depending on `[OBSERVED]` properties without a fallback plan.
@@ -758,6 +832,14 @@ equivalents and check the stock pack again when the engine updates.
 <!-- ===== docs/04-items.md ===== -->
 
 # 04. Items Reference
+
+> **MANDATORY PREREQUISITES — DO NOT SKIP.** This file assumes you have read
+> [01-engine-overview.md](01-engine-overview.md) AND
+> [08-pitfalls.md](08-pitfalls.md). 01 defines the ID rules, reserved names
+> and trust labels this file relies on; 08 lists the real failure modes
+> behind every DO/AVOID note. Skipping either is the most common reason
+> models generate broken packs from this guide. If you received only this
+> file, fetch and read both before writing any code.
 
 Item definitions are JSON files in `items/` of the pack. The file name defines
 the content name: `items/shotgun.json` in pack `my_pack` becomes
@@ -790,8 +872,8 @@ Real game pack, `my_pack:shotgun` (wooden_meat_game):
     "model-name": "shotgun"
 }
 ```
-`model-name: "shotgun"` resolves to `my_pack:models/shotgun.obj` — models are an
-excluded topic (docs/stubs/TODO-models.md); omitting `model-name` makes the
+`model-name: "shotgun"` resolves to `my_pack:models/shotgun.obj` — models are
+covered in 14-models.md; omitting `model-name` makes the
 engine generate a default model.
 
 Real game pack, `my_pack:spawn_nepis` (spawn-egg style item driven by a script):
@@ -807,13 +889,13 @@ Real game pack, `my_pack:spawn_nepis` (spawn-egg style item driven by a script):
 
 ### Visual
 
-| Property     | Type   | Meaning                                                                 |
-| ------------ | ------ | ----------------------------------------------------------------------- |
-| `icon-type`  | string | `sprite` (2D icon) \| `block` (3D block preview). `none` exists only for `core:empty` and may be removed — AVOID using it. `[DOC]` |
-| `icon`       | string | For `sprite`: `atlas:texture` — e.g. `items:shotgun`, `blocks:dirt`. For `block`: block ID — e.g. `base:wood`. `[VERIFIED]` |
+| Property | Type | Meaning |
+| --- | --- | --- |
+| `icon-type` | string | `sprite` (2D icon) \| `block` (3D block preview). `none` exists only for `core:empty` and may be removed — AVOID using it. `[DOC]` |
+| `icon` | string | For `sprite`: `atlas:texture` — e.g. `items:shotgun`, `blocks:dirt`. For `block`: block ID — e.g. `base:wood`. `[VERIFIED]` |
 | `model-name` | string | Item model name; default `packid:itemname`; auto-generated when absent. `[DOC]` |
-| `caption`    | string | Display name in inventory. Supports inline `md` markup. `[DOC]` Default caption derives from the ID (underscores → spaces). `[OBSERVED]` |
-| `description`| string | Inventory tooltip. Supports inline `md` markup. `[DOC]` |
+| `caption` | string | Display name in inventory. Supports inline `md` markup. `[DOC]` Default caption derives from the ID (underscores → spaces). `[OBSERVED]` |
+| `description` | string | Inventory tooltip. Supports inline `md` markup. `[DOC]` |
 
 The two automatic atlases are `blocks` (from `textures/blocks/*.png`) and
 `items` (from `textures/items/*.png`) — same for every pack; your PNGs simply
@@ -821,14 +903,14 @@ join them by file name. See 05-textures-and-assets.md.
 
 ### Behavior
 
-| Property        | Type    | Meaning                                                                 |
-| --------------- | ------- | ----------------------------------------------------------------------- |
-| `placing-block` | string  | Block ID placed on right-click. This is what generated block-items use internally. `[DOC]` |
-| `emission`      | [R,G,B] | Light emitted while held in hand, each channel 0..15. `[DOC]`            |
-| `stack-size`    | int     | Max per inventory slot. Default 64. Shotgun uses 1. `[VERIFIED]`         |
-| `uses`          | int     | Durability/consumable counter, driven via `inventory.use()` from Lua. Shown in inventory UI. `[VERIFIED]` |
-| `uses-display`  | string  | `none` \| `number` \| `relation` \| `vbar` (default `vbar`). `[DOC]`     |
-| `script-name`   | string  | Script file (without `pack:scripts/` and extension) with the item's event handlers. Default: the item's own name. `[DOC]` |
+| Property | Type | Meaning |
+| --- | --- | --- |
+| `placing-block` | string | Block ID placed on right-click. This is what generated block-items use internally. `[DOC]` |
+| `emission` | [R,G,B] | Light emitted while held in hand, each channel 0..15. `[DOC]` |
+| `stack-size` | int | Max per inventory slot. Default 64. Shotgun uses 1. `[VERIFIED]` |
+| `uses` | int | Durability/consumable counter, driven via `inventory.use()` from Lua. Shown in inventory UI. `[VERIFIED]` |
+| `uses-display` | string | `none` \| `number` \| `relation` \| `vbar` (default `vbar`). `[DOC]` |
+| `script-name` | string | Script file (without `pack:scripts/` and extension) with the item's event handlers. Default: the item's own name. `[DOC]` |
 
 ### Tags
 
@@ -870,6 +952,14 @@ auto-derived caption of `bazalt_breaker`) in `ru_RU.txt` as
 
 # 05. Textures, Atlases, preload.json, Materials, Localization
 
+> **MANDATORY PREREQUISITES — DO NOT SKIP.** This file assumes you have read
+> [01-engine-overview.md](01-engine-overview.md) AND
+> [08-pitfalls.md](08-pitfalls.md). 01 defines the ID rules, reserved names
+> and trust labels this file relies on; 08 lists the real failure modes
+> behind every DO/AVOID note. Skipping either is the most common reason
+> models generate broken packs from this guide. If you received only this
+> file, fetch and read both before writing any code.
+
 This document covers the asset side of the IN-SCOPE topics: block/item textures,
 the pack icon, asset preloading, block materials, and caption localization.
 
@@ -878,10 +968,10 @@ the pack icon, asset preloading, block materials, and caption localization.
 Two global texture atlases exist and every pack contributes to them
 automatically: `[VERIFIED]`
 
-| Atlas    | Fed by                       | Used for                          |
-| -------- | ---------------------------- | --------------------------------- |
+| Atlas | Fed by | Used for |
+| --- | --- | --- |
 | `blocks` | `<pack>/textures/blocks/*.png` | block `texture`/`texture-faces`, block-model textures |
-| `items`  | `<pack>/textures/items/*.png`  | item sprite icons (`icon: "items:x"`) |
+| `items` | `<pack>/textures/items/*.png` | item sprite icons (`icon: "items:x"`) |
 
 Rules:
 
@@ -918,6 +1008,8 @@ asset names/paths (no extensions). `[VERIFIED]`
 
 Categories: `animation`, `fonts`, `models`, `shaders`, `skeletons`, `sounds`,
 `textures`. Extras seen in real packs: `atlases` (see above). `[OBSERVED]`
+The `animation` category (VCA tracks) has its own document:
+11-animation.md.
 
 ```json
 {
@@ -962,9 +1054,10 @@ A *material* bundles interaction sounds for blocks. Blocks reference it by
 }
 ```
 
-- Sound values are names resolved against loaded sounds (sounds themselves are
-  an EXCLUDED topic — docs/stubs/TODO-sounds.md; the stock sounds live in the
-  `base` pack).
+- Sound values are names resolved against loaded sounds — see 12-sounds.md.
+  Material sounds (`steps-sound` etc.) are requested by the engine
+  automatically and need NO `preload.json` entry; if `hit-sound` is omitted
+  it falls back to `steps-sound`. The stock sounds live in the `base` pack.
 - The stock `config/defaults.toml` sets `block-material = "base:stone"` as the
   game-wide fallback. `[OBSERVED]`
 - DO reuse existing `base:*` materials (`base:stone`, `base:wood`, `base:ground`,
@@ -1007,488 +1100,17 @@ bazalt breaker=крушитель базальта
   translations go to `texts/<locale>.txt`.
 
 
-<!-- ===== docs/06-walkthrough.md ===== -->
-
-# 06. Walkthrough: Build a Complete Minimal Pack
-
-Goal: a working pack `my_first_pack` that adds:
-- block `my_first_pack:ruby_ore` — a stone-like ore cube,
-- block `my_first_pack:ruby_lamp` — a glowing cube,
-- block `my_first_pack:ruby_flower` — a decorative plant,
-- item `my_first_pack:ruby` — a plain sprite item,
-- a pack icon.
-
-No Lua, no models, no sounds — pure declarative content. Every file below is
-complete and final; assemble them in order and the pack works.
-
-## Step 0 — Choose the location
-
-DO develop in the user content folder so any world can use the pack:
-
-```text
-$HOME/.voxeng/content/my_first_pack/
-```
-
-(Linux path; `user:content` source, priority above `res:content` — see
-02-pack-structure.md.) The folder name is free-form — it does NOT need to
-match the pack ID (real packs rarely match). This walkthrough uses the ID as
-the folder name purely for tidiness.
-
-## Step 1 — package.json (pack becomes loadable)
-
-File: `my_first_pack/package.json`
-
-```json
-{
-    "id": "my_first_pack",
-    "title": "My First Pack",
-    "version": "0.1.0",
-    "creator": "Your Name",
-    "description": "Ruby ore, lamp, flower and a ruby item",
-    "dependencies": ["base"]
-}
-```
-
-`dependencies: ["base"]` is REQUIRED here because the blocks below use
-`base:durability` and `base:loot` (properties registered by `base`).
-
-STOP and verify: the pack must already appear in the engine's content menu with
-no other files at all.
-
-## Step 2 — Textures
-
-Create two folders and four PNG files, 16x16, RGBA:
-
-```text
-textures/blocks/ruby_ore.png
-textures/blocks/ruby_lamp.png
-textures/blocks/ruby_flower.png
-textures/items/ruby.png
-```
-
-Any 16x16 pixel-art works while prototyping. The file names become the texture
-names (`ruby_ore`, ...). No `.json` needed for textures — the atlases pick PNGs
-up automatically (see 05).
-
-## Step 3 — The ore block
-
-File: `blocks/ruby_ore.json`
-
-```json
-{
-    "texture": "ruby_ore",
-    "material": "base:stone",
-    "base:durability": 3.0,
-    "base:loot": [
-        {"item": "my_first_pack:ruby", "min": 1, "max": 2, "chance": 1.0}
-    ]
-}
-```
-
-Notes:
-- `"texture"` — single texture on all 6 faces (order not relevant here).
-- `"material": "base:stone"` — reuses base's sounds; no sound files needed.
-- loot drops the ITEM `my_first_pack:ruby` defined in Step 6.
-
-## Step 4 — The lamp block
-
-File: `blocks/ruby_lamp.json`
-
-```json
-{
-    "texture": "ruby_lamp",
-    "material": "base:glass",
-    "emission": [14, 4, 4],
-    "light-passing": true,
-    "base:durability": 0.5
-}
-```
-
-`emission` channels are 0..15; `[14, 4, 4]` is strong red. This block drops
-itself when broken: blocks without `base:loot` default to dropping their own
-generated item (stock stone/dirt behave this way `[OBSERVED]`).
-
-## Step 5 — The flower block (crossed sprite)
-
-File: `blocks/ruby_flower.json`
-
-```json
-{
-    "texture": "ruby_flower",
-    "material": "base:grass",
-    "model": "X",
-    "draw-group": 1,
-    "light-passing": true,
-    "obstacle": false,
-    "replaceable": true,
-    "grounded": true,
-    "hitbox": [0.15, 0.0, 0.15, 0.7, 0.5, 0.7],
-    "base:durability": 0.0,
-    "base:loot": []
-}
-```
-
-This is the stock flower recipe: `model X` + no obstacle + replaceable + grounded
-+ draw-group 1. `"base:loot": []` means it drops nothing (vs. default self-drop).
-
-## Step 6 — The ruby item
-
-File: `items/ruby.json`
-
-```json
-{
-    "icon-type": "sprite",
-    "icon": "items:ruby",
-    "stack-size": 64
-}
-```
-
-`"icon": "items:ruby"` points at `textures/items/ruby.png` from Step 2. This
-item is inert (no `placing-block`, no script) — it is a material/crafting-style
-resource.
-
-## Step 7 — Pack icon
-
-Save a square PNG as `icon.png` at the pack root (128x128 recommended).
-
-## Step 8 — Enable and test
-
-1. Launch the engine.
-2. Create or open a world; open the content selection and enable
-   **My First Pack** (its dependency `base` is required for any world anyway).
-3. In game: give items through the inventory/content screen, place the ore,
-   break it — the ruby item drops; place the lamp — the area lights red; place
-   the flower on top of a full block.
-
-## Final file tree
-
-```text
-my_first_pack/
-├── package.json
-├── icon.png
-├── blocks/
-│   ├── ruby_ore.json
-│   ├── ruby_lamp.json
-│   └── ruby_flower.json
-├── items/
-│   └── ruby.json
-└── textures/
-    ├── blocks/
-    │   ├── ruby_ore.png
-    │   ├── ruby_lamp.png
-    │   └── ruby_flower.png
-    └── items/
-        └── ruby.png
-```
-
-(`content.json` appears next to `package.json` after the pack loads — generated
-by the engine. AVOID touching it.)
-
-## Extensions beyond this walkthrough
-
-- Per-face textures → `texture-faces` (03-blocks.md).
-- Localization of captions → `texts/ru_RU.txt` with `ruby ore=рубиновая руда`
-  (05-textures-and-assets.md).
-- Behavior (drop-on-use, ticking) → Lua scripts, out of scope; see stubs and
-  then the engine's `doc/ru/scripting.md`.
-
-## Verification checklist
-
-- [ ] `package.json` parses as JSON (no trailing commas, no comments).
-- [ ] `id` passes the character/length rules and is not reserved (the folder
-      name may be anything — equality with `id` is not required).
-- [ ] Every `texture`/`icon` name has a matching PNG in the right folder.
-- [ ] Every `pack:` reference points to an existing pack (dependency declared).
-- [ ] `base:*` properties are used only with `"base"` in dependencies.
-- [ ] No `content.json` in your source files (engine generates it).
-
-
-<!-- ===== docs/07-example-repos.md ===== -->
-
-# 07. Annotated Breakdown of Real Repositories
-
-Two real-world repositories are referenced by this guide. Read this file to map
-their structure onto the concepts, and to know which of their folders are OUT OF
-SCOPE of this guide.
-
-- Game project: <https://github.com/George-Noise/wooden_meat_game>
-- UI pack: <https://github.com/George-Noise/fork_of_kompot>
-
-Both are unfinished but load and run; they are referenced as *structure
-evidence*, not as style guides.
-
-## wooden_meat_game — a game project wrapping several packs
-
-Top level is a **project**, not a pack (projects are an excluded topic — see
-docs/stubs/TODO-projects-worldgen.md):
-
-```text
-wooden_meat_game/
-├── project.toml            # project manifest
-├── project_client.lua      # project-level client script   (out of scope)
-├── start.lua               # project entry script           (out of scope)
-├── voxelcore_types.lua     # Lua type annotations           (out of scope)
-└── content/                # project:content source — packs live here
-```
-
-`project.toml`:
-
-```toml
-name = "wooden_meat_game"
-title = "Wooden Meat Game"
-base_packs = ["base", "kompot", "wooden_meat_menu"]
-permissions = []
-```
-
-`base_packs` lists packs enabled by default; they resolve against
-`project:content` (this repo's `content/`) and lower-priority sources.
-`[OBSERVED]`
-
-### Packs inside content/
-
-| Folder                      | id in package.json | Lesson                                              |
-| --------------------------- | ------------------ | --------------------------------------------------- |
-| `kompot_0f9103ff-1.2.2/`    | `kompot`           | **Folder name ≠ pack ID** — engine reads the ID from package.json `[OBSERVED]` |
-| `my_pack/`                  | `my_pack`          | Title differs from id: "Simple Box and Gun" — fine  |
-| `sfx/`                      | `vd_ambient_sfx`   | Folder `sfx`, id `vd_ambient_sfx` — again ≠         |
-| `vd_belt_system/`           | `vd_belt_system`   | Conventional 1:1 naming (recommended default)       |
-| `wooden_meat_menu/`         | `wooden_meat_menu` | Declares `"dependencies": ["kompot"]` `[OBSERVED]`  |
-
-Vendored-pack naming (`kompot_<hash>-<version>`) is a human-organization trick;
-the engine only sees id `kompot`.
-
-### my_pack — what is in scope
-
-```text
-my_pack/
-├── package.json            # id "my_pack", version "0.0.1"
-├── icon.png                # 210x208 — icon size is not enforced
-├── content.json            # auto-generated (items/entities lists)
-├── items/
-│   ├── shotgun.json
-│   ├── spawn_nepis.json
-│   └── spawn_turret.json
-├── textures/
-│   └── items/              # shotgun.png, nepis.png, turret.png → items atlas
-├── preload.json
-├── scripts/ ...            # Lua event handlers (out of scope)
-├── entities/ ...           # out of scope
-├── models/ ...             # out of scope
-├── animation/, skeletons/, sounds/   # out of scope
-```
-
-`package.json` has no `dependencies` yet references only its own content —
-correct, because it does not use `base:*` properties.
-
-`items/shotgun.json`:
-
-```json
-{
-  "icon-type": "sprite",
-  "icon": "items:shotgun",
-  "stack-size": 1,
-  "model-name": "shotgun"
-}
-```
-
-Takeaways (all `[OBSERVED]`):
-- Sprite icon `"items:shotgun"` ↔ file `textures/items/shotgun.png`.
-- `stack-size: 1` for a weapon; `model-name: "shotgun"` pulls
-  `models/shotgun.obj`.
-- `items/spawn_nepis.json` has only `icon-type`+`icon` — the rest of behavior
-  lives in `scripts/spawn_nepis.lua` (handler `on_use(pid)`, spawns an entity).
-- `preload.json` preloads only non-auto assets, with keys `animation` (NOTE the
-  singular spelling — engine constant), `sounds`, `textures`: two animations,
-  one sound, two effect textures (see 05).
-- Note the absence of `blocks/` — a pack is NOT required to define blocks.
-
-## fork_of_kompot — a pack distributing a Lua framework
-
-Kompot is a declarative-UI framework pack ("Jetpack-Compose-like") distributed
-AS a content pack. Kompot's own framework internals stay out of scope, but the
-engine-side HUD/UI mechanics its files use (`scripts/hud.lua`, `layouts/`,
-`config/bindings.toml`) are now covered in 09-hud-and-ui.md. `[OBSERVED]`
-throughout.
-
-```text
-fork_of_kompot/
-├── package.json            # id "kompot", version "1.2.2", "license": "MPL-2.0"
-├── icon.png
-├── preload.json            # 28 font entries + 2 custom atlases
-├── modules/                # Lua libraries: modules/kompot.lua + modules/kompot/...
-├── scripts/hud.lua         # HUD entry script — on_hud_open() (see 09)
-├── layouts/                # gallery.xml + gallery.xml.lua (layout + companion script, see 09)
-├── config/bindings.toml    # [kompot] gallery = "key:f12"
-├── texts/                  # en_US.txt, ru_RU.txt — incl. dotted keys
-├── fonts/                  # IBM Plex TTFs (out of scope)
-├── textures/               # UI skin/icons textures (out of scope)
-├── annotations/            # editor/LLM Lua annotations (out of scope)
-├── docs/, art/, LICENSES/, CHANGELOG.md, README.md   # repo hygiene, engine ignores
-```
-
-Takeaways relevant to pack authors:
-
-- `package.json` extra field `"license"` is tolerated (engine ignores unknown
-  fields). Metadata for humans goes fine there.
-- A pack CAN ship pure code/assets with zero blocks and zero items — Kompot has
-  no `blocks/` or `items/` folder at all.
-- `preload.json` fonts use object entries:
-  `{"name": "kompot_12", "path": "fonts/IBMPlexSans-Regular.ttf", "size": 12}`
-  — font NAMES are how other content references them.
-- `config/bindings.toml` binds a pack action to a key:
-  ```toml
-  [kompot]
-  gallery = "key:f12"
-  ```
-- Localization files mix content-caption style keys and dotted keys:
-  `kompot.gallery=Kompot / Gallery`.
-- Consuming packs declare `"dependencies": ["kompot"]` and call its modules via
-  `require "kompot:kompot"` — modules are namespaced by pack id (Lua topic).
-
-## Which files in these repos are engine-relevant vs ignored
-
-Engine-relevant (affect loading/content): `package.json`, `icon.png`,
-`preload.json`, `content.json` (generated), `blocks/`, `items/`,
-`block_materials/`, `textures/`, `texts/`, `config/`, plus the out-of-scope
-content folders listed in 02.
-
-Ignored by the engine (repo hygiene, safe to keep for humans/LLMs): `README.md`,
-`CHANGELOG.md`, `LICENSE`, `LICENSES/`, `docs/`, `art/`, `annotations/`,
-`*.toml` at project level. DO keep them — they cost nothing and help everyone.
-
-## When to copy what
-
-- Starting a new pack → copy the *shape* of `my_pack` (minimal + only needed folders).
-- Need items with behavior → look at `my_pack/items/*` + its scripts, then read
-  engine scripting docs before writing your own.
-- Need the game-shell around packs → that is a project; out of scope, see stub.
-- Need UI → Kompot's own docs (`docs/` inside fork_of_kompot) are the entry point.
-
-
-<!-- ===== docs/08-pitfalls.md ===== -->
-
-# 08. Pitfalls and Pre-flight Checklist
-
-Every entry below is a real failure mode — either documented upstream, thrown
-by the engine, or observed in real packs. Treat each AVOID as a hard rule.
-
-## Fatal mistakes
-
-1. **Editing `content.json`.** It is auto-generated and used to convert world
-   saves. Manual edits corrupt worlds irreversibly (upstream warning).
-   AVOID creating, editing, or deleting it in source repos.
-2. **Missing `package.json`.** A folder without it is not a pack — the scanner
-   skips it. DO always start from the manifest.
-3. **Invalid pack ID.** Outside `a-z0-9_`, starting with a digit, or shorter
-   than 2 / longer than 24 chars breaks registration. Reserved IDs (`res`,
-   `user`, `world`, `project`, `config`, `core`) are unavailable. `[VERIFIED]`
-4. **`texture-faces` with fewer than 6 entries.** The engine throws
-   "texture-faces requires 6 elements" and the pack fails to load.
-   `[OBSERVED: engine source]`
-5. **Using `texture` and `texture-faces` together.** Documented as incompatible;
-   pick one. `[DOC]`
-6. **Paths or extensions in texture names.** `"texture": "blocks/dirt.png"` is
-   wrong. The value is a NAME resolved inside an atlas: `"dirt"` or
-   `"blocks:dirt"` depending on context. `[VERIFIED]`
-7. **Using `base:*` properties without depending on `base`.** `base:durability`
-   and `base:loot` are registered by the `base` pack; without
-   `"dependencies": ["base"]` they are not guaranteed to exist. `[VERIFIED]`
-8. **Loot referencing a block instead of its item.** `base:loot[].item` needs an
-   ITEM id; a block's item is `<pack>:<block>.item`. `[VERIFIED]`
-
-## Likely-wrong assumptions (seen in practice)
-
-9. **Assuming folder name = pack ID.** The engine keys packs by the `"id"` in
-   `package.json`; the folder name is free-form and has NO meaning to the
-   engine. In real packs the folder name almost always DIFFERS from the ID
-   (e.g. folder `kompot_0f9103ff-1.2.2` ships `"id": "kompot"`), and exact
-   matches are rare. NEVER infer a pack's ID from its folder name — read the
-   manifest. `[OBSERVED]`
-10. **Assuming `icon.png` must be 128x128.** It is a recommendation; 64x64 and
-    210x208 exist in working packs. Keep it square. `[OBSERVED]`
-11. **Assuming texture sizes are enforced.** Stock uses 16x16; other sizes are
-    uncharted. DO stay 16x16 for blocks/items.
-12. **Assuming `version` matters for pack resolution.** When two sources carry
-    the same pack ID, priority decides; version is ignored. `[DOC]`
-13. **Assuming a pack needs content.** A folder containing ONLY `package.json`
-    is a complete, valid, loadable pack — nothing else is required. Blocks,
-    items, textures, config and code are all optional extras (Kompot ships no
-    blocks/items; confirmed first-hand). `[VERIFIED]`
-14. **Inventing dependency version operators.** Only `@>=x.y` and `*` are
-    documented. AVOID `<`, `<=`, `=`, ranges. `[DOC]`
-15. **Capitalizing captions yourself.** Docs recommend lowercase captions; the
-    engine upper-cases for display. Localization keys must match the lowercase
-    caption string. `[DOC]`
-16. **Preloading auto-loaded assets.** Block/item atlas textures are picked up
-    automatically; preloading them is noise (upstream warns to keep preload
-    minimal). `[DOC]`
-17. **Putting `pack_id:` into `<image src>` or `menu.page`.** These do NOT use
-    the pack namespace: `src` without a colon is a global texture name; `src`
-    with a colon is `atlas_name:tile_name`; `menu.page` takes a bare page name
-    scanned across all packs. Pack-qualified ids belong only to layout ids
-    (`hud.show_overlay("pack:layout")`) and document paths
-    (`gui.load_document`). See 09-hud-and-ui.md. `[VERIFIED]`
-18. **Spelling the animation folder or preload key `animations`.** The engine
-    constant is `animation` (singular): pack folder `animation/`, `preload.json`
-    key `"animation"`. An upstream quirk you must reproduce. `[VERIFIED]`
-
-## JSON hygiene
-
-- AVOID trailing commas and comments — block/item files are strict JSON.
-- DO keep UTF-8 (localization values are non-ASCII routinely).
-- DO keep one definition per file; the file name is the content name.
-
-## Pre-flight checklist (run before delivering a pack)
-
-Manifest:
-- [ ] `package.json` exists, parses, has `id`/`title`/`version`.
-- [ ] `id` passes rules and is not reserved. Folder name is free-form — it
-      does NOT need to equal `id`.
-- [ ] `dependencies` lists every pack whose `pack:` references you use.
-
-Content:
-- [ ] Every `blocks/*.json` and `items/*.json` uses only properties documented
-      in 03/04 (or upstream docs) — nothing invented.
-- [ ] `texture-faces` arrays have exactly 6 entries in west/east/bottom/top/
-      north/south order.
-- [ ] No `texture` + `texture-faces` in the same block.
-- [ ] Every texture/icon name resolves to a real PNG in `textures/blocks/` or
-      `textures/items/`.
-- [ ] `base:*` properties used only with `base` dependency; loot items use
-      `.item` suffix where needed.
-
-Assets & config:
-- [ ] `icon.png` present at pack root (square).
-- [ ] `preload.json` (if present) contains only genuinely needed entries.
-- [ ] `texts/*.txt` keys match captions exactly (lowercase, spaces not
-      underscores).
-- [ ] No `content.json` committed from your side.
-
-UI (09):
-- [ ] Layout XMLs sit at `layouts/*.xml` (flat folder); menu pages at
-      `layouts/pages/`.
-- [ ] No pack id in `menu.page` names or in `<image src>` values.
-- [ ] Animation folder/key spelled `animation` (singular), if used.
-
-Runtime:
-- [ ] Pack loads without errors in the engine log/console.
-- [ ] Blocks appear in the content/inventory screen and place correctly.
-- [ ] Loot drops, lights emit, plants sit on ground — as designed.
-
-## Debugging hints
-
-- Load errors are printed by the engine with the failing pack and file name
-  (e.g. unknown model, JSON parse errors, missing textures render as
-  `notfound`). Read the console output first. `[OBSERVED]`
-- A pack that loads but shows missing textures/`notfound` icons indicates a
-  name/folder mismatch (03/05 rules), not a manifest problem.
-- The in-game console and engine logging are documented in the engine repo
-  (`doc/ru/console.md`, mirrored as `doc/en/console.md`) — out of scope here.
-
-
 <!-- ===== docs/09-hud-and-ui.md ===== -->
 
 # 09. HUD and UI Basics (layouts, pages, overlays)
+
+> **MANDATORY PREREQUISITES — DO NOT SKIP.** This file assumes you have read
+> [01-engine-overview.md](01-engine-overview.md) AND
+> [08-pitfalls.md](08-pitfalls.md). 01 defines the ID rules, reserved names
+> and trust labels this file relies on; 08 lists the real failure modes
+> behind every DO/AVOID note. Skipping either is the most common reason
+> models generate broken packs from this guide. If you received only this
+> file, fetch and read both before writing any code.
 
 This document covers the PACK-SIDE mechanics of shipping UI: where layout files
 live, how the engine registers and addresses them, and the ways to put them on
@@ -1505,12 +1127,12 @@ Blocks and items live in ONE namespaced registry (`pack_id:name`, see
 THREE different addressing schemes (document ids, menu page names, texture
 names; the document-id scheme comes in two flavors, see rows 1–2):
 
-| What you write                            | Scheme                       | Example                  |
-| ----------------------------------------- | ---------------------------- | ------------------------ |
-| Layout document id (`hud.*`)              | `pack_id:file_stem`, derived by the engine | `kompot:gallery` |
+| What you write | Scheme | Example |
+| --- | --- | --- |
+| Layout document id (`hud.*`) | `pack_id:file_stem`, derived by the engine | `kompot:gallery` |
 | Document alias (`gui.load_document` arg 2, iframe `src`) | any alias YOU invent | `my_pack:extra_panel` |
-| Menu page name (`menu.page`)              | bare name, NO pack id        | `settings`               |
-| `<image src>` texture                     | global name OR `atlas:tile`  | `gui/error`, `blocks:dirt` |
+| Menu page name (`menu.page`) | bare name, NO pack id | `settings` |
+| `<image src>` texture | global name OR `atlas:tile` | `gui/error`, `blocks:dirt` |
 
 DO memorize this table. The most common LLM errors are putting `pack_id:` into
 `menu.page` or `<image src>`, or omitting it in `hud.show_overlay`. `[VERIFIED]`
@@ -1913,15 +1535,15 @@ Each topic exists twice: `doc/en/` (English) and `doc/ru/` (Russian). The
 Russian documentation is usually MORE complete and more current; when the two
 diverge, prefer `doc/ru/`. File names match on both sides:
 
-| Topic                                        | English (`doc/en/`)                    | Russian (`doc/ru/`) — prefer this |
-| -------------------------------------------- | -------------------------------------- | -------------------------------------- |
-| FULL XML element and attribute reference     | `doc/en/xml-ui-layouts.md`             | `doc/ru/xml-ui-layouts.md`             |
-| Element properties/methods from Lua          | `doc/en/scripting/ui.md`               | `doc/ru/scripting/ui.md`               |
-| `gui.*` API (dialogs, documents, templates)  | `doc/en/scripting/builtins/libgui.md`  | `doc/ru/scripting/builtins/libgui.md`  |
-| `hud.*` API                                  | `doc/en/scripting/builtins/libhud.md`  | `doc/ru/scripting/builtins/libhud.md`  |
-| Input callbacks and key codes                | `doc/en/scripting/builtins/libinput.md`| `doc/ru/scripting/builtins/libinput.md`|
-| `on_hud_open` and other events               | `doc/en/scripting/events.md`           | `doc/ru/scripting/events.md`           |
-| `menu.page`, main-menu replacement           | `doc/en/projects.md`                   | `doc/ru/projects.md`                   |
+| Topic | English (`doc/en/`) | Russian (`doc/ru/`) — prefer this |
+| --- | --- | --- |
+| FULL XML element and attribute reference | `doc/en/xml-ui-layouts.md` | `doc/ru/xml-ui-layouts.md` |
+| Element properties/methods from Lua | `doc/en/scripting/ui.md` | `doc/ru/scripting/ui.md` |
+| `gui.*` API (dialogs, documents, templates) | `doc/en/scripting/builtins/libgui.md` | `doc/ru/scripting/builtins/libgui.md` |
+| `hud.*` API | `doc/en/scripting/builtins/libhud.md` | `doc/ru/scripting/builtins/libhud.md` |
+| Input callbacks and key codes | `doc/en/scripting/builtins/libinput.md` | `doc/ru/scripting/builtins/libinput.md` |
+| `on_hud_open` and other events | `doc/en/scripting/events.md` | `doc/ru/scripting/events.md` |
+| `menu.page`, main-menu replacement | `doc/en/projects.md` | `doc/ru/projects.md` |
 
 Also in the engine repository:
 
@@ -1935,100 +1557,2476 @@ Lua scripting beyond these UI entry points is out of scope of this guide (see
 README scope table and docs/stubs/).
 
 
-<!-- ===== docs/stubs/TODO-animations.md ===== -->
+<!-- ===== docs/10-entities.md ===== -->
 
-# STUB — Animations (NOT COVERED YET)
+# 10. Entities (Definitions, Skeletons, Spawning, Components)
 
-Status: **intentionally out of scope of this guide. TODO: write a full document.**
+> **MANDATORY PREREQUISITES — DO NOT SKIP.** This file assumes you have read
+> [01-engine-overview.md](01-engine-overview.md) AND
+> [08-pitfalls.md](08-pitfalls.md). 01 defines the ID rules, reserved names
+> and trust labels this file relies on; 08 lists the real failure modes
+> behind every DO/AVOID note. Skipping either is the most common reason
+> models generate broken packs from this guide. If you received only this
+> file, fetch and read both before writing any code.
 
-What belongs here when written: character/rigging animation formats (VCA),
-block-model animations, asset animation entries in `preload.json` (the key is
-spelled `"animation"`, singular — verified in engine source).
+This document covers the PACK-SIDE basics of entities: JSON definitions in
+`entities/`, skeletons in `skeletons/`, spawning from items or Lua, and the
+minimal shape of a custom component. Bone ANIMATION is covered in
+11-animation.md; rigging internals and the deep ECS API stay OUT OF SCOPE —
+pointers are at the end.
 
-Until this stub is replaced:
+## What entities are (and are not)
 
-- DO NOT guess animation API, file formats, or property names.
-- Authoritative sources instead:
-  - `<voxelcore repo>/doc/ru/animation.md` (RU only — not translated to EN)
-  - `<voxelcore repo>/doc/ru/vca.md`, `doc/ru/rigging.md`
-  - Real usage: `content/my_pack/animation/*.vca` + `preload.json` in
-    <https://github.com/George-Noise/wooden_meat_game>
+Entities are simulated objects with their own physics body and free 3D
+position: dropped items, falling blocks, mobs, projectiles, the player. They
+are NOT blocks (no grid cell) and NOT items (no inventory stack). `[DOC]`
+
+- Entity definitions are JSON files in `entities/` of the pack. The FILE NAME
+  is the entity name: `entities/drop.json` in pack `base` becomes `base:drop`
+  — the same file-name rule as blocks and items. `[VERIFIED: engine loader +
+  stock pack]`
+- The stock pack ships three: `base:drop` (dropped item), `base:falling_block`
+  (sand-like gravity block), `base:player`. `[OBSERVED]`
+
+## Entity definition reference (`entities/<name>.json`)
+
+The engine loader reads EXACTLY the keys below and SILENTLY IGNORES everything
+else — a typo in a field name never throws, it just does nothing. `[VERIFIED:
+engine source, EntityLoader.cpp]`
+
+| Field | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `parent` | string | — | Inherit another entity def (see below) |
+| `components` | list | `[]` | Components, in init order (see below) |
+| `hitbox` | `[w, h, d]` | — | Physics box size in blocks |
+| `body-type` | string | `dynamic` | `static` / `kinematic` / `dynamic` |
+| `blocking` | bool | `true` | Blocks block placement inside hitbox |
+| `selectable` | bool | `true` | Cursor ray hits it (`on_attack`/`on_use`) |
+| `solid` | bool | `false` | Hitbox is a tangible obstacle |
+| `mass` | number | `1.0` | Mass in kg (`kinematic` = infinite) |
+| `elasticity` | number | `0.0` | Bounciness |
+| `step-height` | number | `0.5` | Max auto-step height without jumping |
+| `sensors` | list | `[]` | Trigger volumes (see below) |
+| `skeleton-name` | string | `pack:<entity name>` | Which skeleton renders this entity |
+| `material` | string | — | Same material names as blocks |
+| `lighting-mode` | string | `solid` | `solid` / `bone-based` |
+| `save` | bool | `true` | Save the entity into the world at all |
+| `save-skeleton-pose` | bool | `false` | Save bone pose |
+| `save-skeleton-textures` | bool | `false` | Save dynamically assigned textures |
+| `save-body-velocity` | bool | `true` | Save velocity |
+| `save-body-settings` | bool | `true` | Save modified body settings |
+
+`[VERIFIED: engine source; defaults cross-checked with EntityDef.hpp]`
+
+### `parent` — inheritance (UNDOCUMENTED upstream; use only when necessary)
+
+`"parent": "base:some_entity"` clones the parent definition first, then the
+own fields override the inherited values. The parent is a REGISTERED entity
+name (`pack:name`), not a file path. `[OBSERVED: engine source]`
+
+**Treat this as an opt-in mechanism, not a recommended default.** It is an
+undocumented, lightly-exercised feature, and most pack authors do not use it
+— copying the JSON and editing the copy is the common, practical approach.
+Think of it as inheritance in OOP: it looks like the "clean" solution, but a
+bad setup produces exactly the kind of bugs OOP inheritance is notorious
+for. The effective definition is a merge spread across two files, so when
+something breaks you are debugging a result you cannot see in one place; if
+the parent is a `base:` entity, an engine update can also silently change
+your entity. Use `parent` only by necessity — e.g. many near-identical
+variants that must stay in sync with one base you fully control — and never
+"for cleanliness". Avoiding the field entirely is a perfectly valid safety
+choice: authors who skip it never have to hunt for which inherited field
+caused the bug.
+
+### `components`
+
+Either plain strings (`"base:drop"`) or objects with `name` + `args`
+(`{"name": "base:drop", "args": {"item": "base:stone.item", "count": 1}}`).
+The list order IS the initialization order. `args` values arrive in the
+component's `ARGS` table both on fresh spawn AND on load from a save.
+`[DOC]`
+
+### `body-type`
+
+- `dynamic` (default) — physics moves and collides the body.
+- `static` — physics never moves it.
+- `kinematic` — moves, but ignores collisions; treated as infinite mass.
+
+**An invalid value is SILENTLY IGNORED** — the entity keeps the default
+`dynamic`. Real bug: wooden_meat_game's `entities/nepis.json` says
+`"body-type": "rigidbody"` — not a valid name, silently treated as `dynamic`.
+`[VERIFIED: engine source, enum registry]`
+
+### `sensors`
+
+Trigger volumes attached to the body. Two shapes: `["radius", r]` and
+`["aabb", minx, miny, minz, maxx, maxy, maxz]` (the box FOLLOWS the entity
+rotation but does not rotate itself). Sensors are indexed from 0 in list
+order; entering/exiting bodies fire `on_sensor_enter`/`on_sensor_exit` events
+in components. An unknown shape name is logged as an engine error and the
+sensor is skipped — the entity still loads. `[DOC + VERIFIED: engine source]`
+
+### `solid` and `mass`
+
+`"solid": true` makes the hitbox a tangible obstacle for other entities.
+For `solid` DYNAMIC bodies DO specify `mass` explicitly; `kinematic` bodies
+behave as infinite mass regardless of the field. `[DOC]`
+
+## Real annotated examples (verbatim)
+
+`base:drop` — a dropped-item entity: pickup sensors, drop component with
+args, non-blocking:
+
+```json
+{
+    "components": [
+        {
+            "name": "base:drop",
+            "args": {
+                "item": "base:stone.item",
+                "count": 1
+            }
+        }
+    ],
+    "hitbox": [0.4, 0.25, 0.4],
+    "sensors": [
+        ["radius", 0.3],
+        ["radius", 1.6]
+    ],
+    "blocking": false
+}
+```
+
+`base:falling_block` — reuses the shared `block` skeleton, solid hitbox:
+
+```json
+{
+    "components": [
+        "base:falling_block"
+    ],
+    "skeleton-name": "base:block",
+    "hitbox": [0.98, 0.98, 0.98],
+    "solid": true
+}
+```
+
+`my_pack:nepis` (wooden_meat_game, verbatim) — custom components from the
+pack, WITH the real-world `"rigidbody"` bug in `body-type`:
+
+```json
+{
+    "components": [
+        "my_pack:health",
+        "my_pack:enemy",
+        {
+            "name": "my_pack:patrol_ai",
+            "args": {
+                "patrol_size": 10
+            }
+        }
+    ],
+    "hitbox": [1.0, 1.0, 1.0],
+    "body-type": "rigidbody"
+}
+```
+
+DO NOT copy that `body-type` line: the engine silently ignores it. The valid
+spelling for "a physics mob" is no field at all (`dynamic` is the default).
+`[OBSERVED + VERIFIED: engine source]`
+
+## Skeletons (`skeletons/<name>.json`)
+
+A skeleton is the render model tree of an entity. Skeleton files are
+pack-namespaced (`skeletons/drop.json` in `base` -> `base:drop`) but are NOT
+indexed content: they are looked up by `skeleton-name` at render time.
+`[DOC: doc/ru/rigging.md]`
+
+```json
+{
+    "root": {
+        "name": "body",
+        "model": "turret",
+        "offset": [-0.5, -0.5, -0.5],
+        "nodes": [
+            {
+                "name": "gun_hand",
+                "offset": [0.5, 1.0, 0.5],
+                "nodes": [
+                    { "name": "gun", "model": "shotgun", "offset": [0, -0.2, 0] }
+                ]
+            }
+        ]
+    }
+}
+```
+
+(verbatim `my_pack:turret` skeleton, wooden_meat_game)
+
+- Every node field is optional: `name` (for script access), `model` (model
+  name from the pack's `models/` folder), `offset` `[x, y, z]` relative to the
+  parent, `nodes` (children). `[DOC]`
+- `"model"` is a NAME without prefix or extension; models are loaded
+  automatically — DO NOT add them to `preload.json`. Formats: `obj`, `vec3`,
+  `vcm`; `.mtl` of OBJ files is ignored, the texture is chosen by material
+  name. `[DOC: doc/ru/rigging.md]`
+- `skeleton-name` defaults to `pack:<entity name>`: an entity `my_pack:nepis`
+  renders from `my_pack/skeletons/nepis.json` unless another skeleton is set.
+  DO ship a skeleton for every visible entity or set `skeleton-name`.
+  `[DOC + OBSERVED: every entity in base and wooden_meat_game has one]`
+- Moving/bones/animating them is script-only; VCA animations are covered in
+  11-animation.md. `[DOC]`
+
+## Spawning entities
+
+### Way 1 — spawn-egg item (declarative + one function) `[OBSERVED]`
+
+The item file is icon-only; behavior lives in the item's script (script name
+defaults to the item name — see 04-items.md):
+
+```json
+{
+    "icon-type": "sprite",
+    "icon": "items:nepis"
+}
+```
+
+`scripts/spawn_nepis.lua` (verbatim, wooden_meat_game):
+
+```lua
+local spawn_entity_name = "my_pack:nepis"
+
+function on_use_on_block(x, y, z, playerid, normal)
+    entities.spawn(spawn_entity_name,
+        { x + 0.5 + normal[1], y + 0.5 + normal[2], z + 0.5 + normal[3] })
+end
+```
+
+An icon-only item WITHOUT such a script does nothing when used. `[OBSERVED]`
+
+### Way 2 — `entities.spawn` from any Lua `[DOC]`
+
+```lua
+local e = entities.spawn("my_pack:nepis", {x, y, z})
+-- optional 3rd argument overrides component ARGS:
+-- {["my_pack__patrol_ai"] = {patrol_size = 5}}
+-- note the DOUBLE underscore: pack id + "__" + component name
+```
+
+Useful registry functions (`[DOC: doc/ru/scripting/builtins/libentities.md]`):
+`entities.get(uid)`, `entities.exists(uid)`, `entities.def_index("pack:name")`,
+`entities.def_name(index)`, `entities.def_hitbox(id)`, `entities.def_solid(id)`,
+`entities.get_all()`, `entities.get_all_in_box(pos, size)`,
+`entities.get_all_in_radius(center, radius)`, `entities.raycast(...)`.
+An entity handle also exposes `entity:despawn()`, `entity:get_uid()`,
+`entity:def_name()`. `[OBSERVED: wooden_meat_game components]`
+
+**Iteration trap:** the `entities.get_all*` functions return tables with
+INTEGER keys (uid -> entity). Iterate with `pairs`, measure with
+`table.count_pairs`; `ipairs` and `#t` are WRONG there. `[DOC]`
+
+### Built-in components you will meet
+
+- `core:mob` (arg `jump_force`), `core:player`, `core:pathfinding` —
+  `[DOC: doc/ru/scripting/core_components.md, RU-only file]`
+- `base:drop` (args `item`, `count`), `base:falling_block`,
+  `base:player_animator` — `[OBSERVED: stock pack entity files]`
+- The player entity is bound in `config/defaults.toml`:
+  `player-entity = "base:player"`. `[OBSERVED: stock pack config]`
+
+## Your own components (`scripts/components/`)
+
+A component is a Lua file `scripts/components/<name>.lua`; it is addressed as
+`pack:name` in the entity's `components` list. `[DOC + OBSERVED:
+wooden_meat_game]`
+
+Environment available inside a component:
+
+- `ARGS` — the `args` table from the entity definition (or the
+  `entities.spawn` override).
+- `SAVED_DATA` — the component's persisted table; write what must survive a
+  save/load cycle.
+- `this` — the component's own function table (expose API for other
+  components: `this.take_damage = ...`).
+- `entity` — the entity handle (`entity.skeleton`, `entity:get_uid()`,
+  `entity:despawn()`, ...).
+- Events: `on_spawn()`, `on_update(tps)`, `on_save()`, and
+  `on_sensor_enter(index)` / `on_sensor_exit(index)` for sensors. `[OBSERVED:
+  real components; DOC: upstream]`
+
+Persistence pattern from a real component (`my_pack:health`, excerpt):
+
+```lua
+local props = {}
+
+local function def_prop(name, def_value)
+    props[name] = SAVED_DATA[name] or ARGS[name] or def_value
+    this["get_" .. name] = function() return props[name] end
+    this["set_" .. name] = function(value)
+        props[name] = value
+        if math.abs(value - def_value) < 1e-7 then
+            SAVED_DATA[name] = nil
+        else
+            SAVED_DATA[name] = value
+        end
+    end
+end
+
+def_prop("health", 100)
+
+function on_save()
+        SAVED_DATA.health = props.health
+end
+```
+
+`[OBSERVED: wooden_meat_game scripts/components/health.lua]`
+
+Deep ECS internals (cross-component lookup, engine component APIs beyond the
+entity handle) are OUT OF SCOPE — read
+`doc/ru/scripting/core_components.md` and `doc/ru/scripting/ecs.md` before
+going further.
+
+## Entity-specific pitfalls
+
+1. **Inventing `body-type` values.** Only `static` / `kinematic` / `dynamic`
+   exist; anything else (e.g. `rigidbody`) is silently ignored and the entity
+   stays `dynamic`. `[VERIFIED: engine source]`
+2. **Typos in any definition field.** The loader reads only known keys and
+   ignores the rest — `"hitbox"` misspelled means default-size hitbox, no
+   error. Verify against the field table above. `[VERIFIED: engine source]`
+3. **Misspelled component names.** A component string that does not resolve
+   to `scripts/components/<name>.lua` of some loaded pack breaks the entity
+   at spawn/load time. Component ids are `pack:name`, same registry rules as
+   blocks. `[DOC]`
+4. **Visible entity without a skeleton.** `skeleton-name` defaults to
+   `pack:<entity name>`; if no such file exists in `skeletons/` the entity
+   has nothing to render. DO ship `skeletons/<name>.json` for every visible
+   entity. `[OBSERVED: base and wooden_meat_game both do]`
+5. **Preloading models.** Models used by skeletons are auto-loaded;
+   adding them to `preload.json` is noise. `[DOC]`
+6. **`ipairs` over `entities.get_all*` results.** Those tables are keyed by
+   uid, not sequential; use `pairs` + `table.count_pairs`. `[DOC]`
+7. **Expecting a bare item to spawn anything.** A spawn item is just an icon
+   until a script with `on_use_on_block` (or another handler) calls
+   `entities.spawn`. `[OBSERVED]`
+
+## DO / AVOID summary
+
+- DO name entity files after the entity: `entities/<name>.json` ->
+  `pack:name`, same rule as blocks/items.
+- DO read the field table above before inventing fields — everything not
+  listed is silently ignored.
+- DO use `parent` only by necessity — several variants sharing one base you
+  fully control. Copy-pasting the JSON is the normal approach, not a sin.
+- DO give `solid` dynamic bodies an explicit `mass`.
+- DO ship a skeleton for every visible entity (or set `skeleton-name`).
+- DO iterate entity query results with `pairs`, not `ipairs`.
+- AVOID `body-type` values outside `static`/`kinematic`/`dynamic` — silent
+  fallback to `dynamic`.
+- AVOID `parent` by default: it is a lightly-tested, undocumented feature,
+  and an invisible merge across files hides bugs the same way bad OOP
+  inheritance does. Skip the field unless you actually need it.
+- AVOID relying on sensor indices other than list order (0-based).
+- AVOID copying the `"rigidbody"` line from wooden_meat_game — it is a real
+  bug in that repo, kept here only as a warning example.
+
+## Upstream pointers (read before writing real entities)
+
+The paths below are files of the ENGINE's own repository
+(github.com/MihailRis/voxelcore, folder `doc/`) — NOT files of this guide.
+The Russian documentation is usually MORE complete and more current; when the
+two diverge, prefer `doc/ru/`:
+
+| Topic | English (`doc/en/`) | Russian (`doc/ru/`) — prefer this |
+| --- | --- | --- |
+| Entity definition properties | `doc/en/entity-properties.md` | `doc/ru/entity-properties.md` |
+| Built-in components (`core:mob`, ...) | — (no EN file) | `doc/ru/scripting/core_components.md` |
+| `entities.*` Lua API | `doc/en/scripting/builtins/libentities.md` | `doc/ru/scripting/builtins/libentities.md` |
+| Skeletons, rigging, bone animation | — (no EN file) | `doc/ru/rigging.md` |
+| ECS scripting | `doc/en/scripting/ecs.md` | `doc/ru/scripting/ecs.md` |
+
+Also in the engine repository:
+
+- Stock entities: `res/content/base/entities/` and `res/content/base/skeletons/`
+  — authoritative, always up-to-date format examples.
+- Real usage: `wooden_meat_game` `content/my_pack/` — `entities/`,
+  `skeletons/`, `scripts/components/`, spawn items. (Contains the `"rigidbody"`
+  bug documented above — do not treat as style guide.)
+
+VCM/OBJ model formats are covered in 14-models.md; bone animation is
+covered in 11-animation.md.
 
 
-<!-- ===== docs/stubs/TODO-sounds.md ===== -->
+<!-- ===== docs/11-animation.md ===== -->
 
-# STUB — Sounds & Audio (NOT COVERED YET)
+# 11. Animations (VCA Format, Preload, Playback, core:animator)
 
-Status: **intentionally out of scope of this guide. TODO: write a full document.**
+> **MANDATORY PREREQUISITES — DO NOT SKIP.** This file assumes you have read
+> [01-engine-overview.md](01-engine-overview.md) AND
+> [08-pitfalls.md](08-pitfalls.md). 01 defines the ID rules, reserved names
+> and trust labels this file relies on; 08 lists the real failure modes
+> behind every DO/AVOID note. Skipping either is the most common reason
+> models generate broken packs from this guide. If you received only this
+> file, fetch and read both before writing any code.
 
-What belongs here when written: `sounds/` folder formats (OGG etc.), sound name
-variants pattern, `audio.*` Lua API, positional/2D playback, audio in
-`preload.json`.
+This document covers the animation system of VoxelCore: the text-based VCA
+format (`.vca` files), how tracks are loaded through `preload.json`, how to
+play them from Lua (`animation.play`), and the built-in state-machine
+component `core:animator`. It continues from 10-entities.md: entity
+skeletons (bones) are described there, and every bone referenced by an
+animation must exist in the entity's skeleton file.
 
-Until this stub is replaced:
+What is OUT OF SCOPE here: creating/exporting animations in external tools,
+the VCM 3D-model format itself (see 14-models.md), and camera
+internals beyond playing a track on a camera.
 
-- DO NOT guess sound file requirements or playback API.
-- What you MAY rely on from in-scope docs: block materials reference sound
-  names (`steps-sound`, `place-sound`, `break-sound`, `hit-sound` — see
-  `docs/05-textures-and-assets.md`), and `preload.json` `"sounds"` entries load
-  `name.ogg`, `name_1.ogg`, ... variants `[DOC]`.
-- Authoritative sources instead:
-  - `<voxelcore repo>/doc/ru/audio.md` (RU only — richer than EN)
-  - `<voxelcore repo>/doc/en/audio.md`
-  - Real usage: `content/sfx/` and `content/my_pack/sounds/` in
-    <https://github.com/George-Noise/wooden_meat_game>
+## Mental model
+
+- An **animation track** is a `.vca` text file in the pack folder `animation/`
+  (singular spelling — an engine constant, do NOT "fix" it to `animations`).
+  `[VERIFIED: engine source, ANIMATION_FOLDER]`
+- A track is a set of **directives** (`@move`, `@rotate`, `@scale`, `@zoom`,
+  `@texture`) that define scalar curves over time. Directive ORDER in the
+  file does not matter — the engine applies transforms by channel and axis,
+  not by file order. `[DOC]`
+- Tracks are applied to a **target**: an entity skeleton (`entity.skeleton`)
+  or a camera. Bone-targeted directives name the bone via the `bone`
+  attribute. `[DOC]`
+- Playback is a CLIENT-SIDE visual effect on the render skeleton. Playing a
+  track mutates bone matrices of the local renderer; it does not change
+  entity physics or position. `[VERIFIED: engine source, pose matrices]`
+- The `.vca` parser is implemented in Lua inside the engine
+  (`res/modules/internal/formats/vca.lua`) and compiles each track into a
+  generated Lua function. Parse errors are LOUD (they throw); runtime lookups
+  can be silent (see pitfalls). `[VERIFIED: engine source]`
+
+## Loading tracks — preload.json and the FLAT namespace
+
+Animations are NOT loaded automatically. A pack must list them in its
+`preload.json` under the `"animation"` key. `[DOC: assets-preload]`
+
+```json
+{
+    "animation": ["hit", "rip"]
+}
+```
+
+How the engine resolves an entry — read this carefully, it defines the
+naming rules: `[VERIFIED: engine source, AssetsLoader.cpp / assetload_funcs.cpp]`
+
+1. The preload entry (e.g. `"hit"`) is used VERBATIM as the track name and as
+   a path under the pack folder: the engine searches all content sources for
+   `animation/hit.vca`.
+2. The name is NOT prefixed with the pack id. Unlike blocks and items
+   (`my_pack:my_block`), animation names live in ONE GLOBAL FLAT namespace:
+   `animation.play("hit", ...)` — bare name, no colon.
+3. If the file does not exist, preload SILENTLY SKIPS it (no error at load
+   time). The failure surfaces later: `animation.play` on a missing track
+   logs an engine error `animation track not found` and the playback entry is
+   dropped.
+
+DO namespace your track names: use subfolders in the preload entry and the
+folder tree — `"animation": ["guns/recoil", "mobs/imp_idle"]` loads
+`animation/guns/recoil.vca` under the name `guns/recoil`. Longer unique names
+are the ONLY protection against cross-pack collisions.
+
+- AVOID short generic track names like `"hit"`, `"idle"`, `"walk"`. Another
+  pack preloading the same name overwrites yours (the engine stores tracks
+  by bare name, last load wins), and your `animation.play("hit")` may even
+  resolve to the OTHER pack's file — name resolution searches all content
+  sources, not just your pack. `[VERIFIED: engine source]`
+- Real-world example: wooden_meat_game preloads `"hit"`, `"rip"` — short and
+  collision-prone; it simply got lucky. Do not copy that naming.
+
+Runtime loading from a string is also available (advanced):
+`assets.parse_animation("vca", content_string, "my_name")` — parses a VCA
+text and registers it under the given name. `[DOC: libassets]`
+
+## VCA syntax primer
+
+VCA uses the VCM text syntax (the engine's model-format syntax): directives
+look like XML tags, written `@tag attr value attr2 "quoted value"` with an
+optional `{ ... }` block of child directives. `[DOC: vcm.md]`
+
+- Attributes take bare words (`curve linear`), quoted strings
+  (`bone "body"` — quotes optional for single words), parenthesized vectors
+  (`origin (0.5,0.5,0.5)` — not used by VCA), or `{ ... }` blocks (children).
+- Indentation and line breaks are insignificant; one directive per line is
+  the convention. The example repo uses TAB indentation — this guide shows
+  4 spaces; both parse identically.
+- A `.vca` file has no explicit root element; the whole file is one implicit
+  `track`. `[VERIFIED: engine source, xml.parse_vcd(source, "track")]`
+
+## Directive reference
+
+| Directive | Applies to | Meaning |
+| --- | --- | --- |
+| `@move` | skeleton bone, camera, object | Translate by offset, per axis |
+| `@rotate` | skeleton bone, camera, object | Rotate by angle, per axis — DEGREES |
+| `@scale` | skeleton bone, object | Scale multiplier, per axis |
+| `@zoom` | camera only | Camera zoom multiplier |
+| `@texture` | skeleton only | Swap a dynamic texture slot over time |
+
+`[DOC: vca.md]`
+
+Common attributes: `[DOC + VERIFIED: parser]`
+
+- `bone "name"` — target a bone of the skeleton by name. Directives WITHOUT
+  `bone` target the whole object (camera/object transforms); `@texture`
+  instead uses `name "$slot"` to pick the texture slot.
+- `by x` / `by y` / `by z` — which scalar the curve drives. MUST be exactly
+  one letter `x`, `y` or `z` (anything else is silently computed and never
+  applied). `[VERIFIED: engine source]`
+- `curve const|linear|bezier` or `curve .my_custom` — keyframe curve type
+  (see below).
+- `func (expression)` — expression curve instead of keyframes (see below).
+- `period N` — loop THIS line every N frames (see below).
+
+One line = one directive = one scalar curve. A bone can have up to three
+`@move` lines (`by x/y/z`), three `@rotate` lines, three `@scale` lines.
+
+- AVOID two lines of the same channel+axis on the same bone (e.g. two
+  `@move bone "body" by y`). The engine keeps only the LAST one — the
+  earlier line is silently discarded. `[VERIFIED: engine source, codegen]`
+
+## Time model — configure, frames, duration (read twice)
+
+Meta-information is set with a `@configure` directive; it applies GLOBALLY
+no matter where it sits in the file, but DO put it at the top:
+
+```vca
+@configure fps 30 frames 15 rotation-order XYZ
+```
+
+`[DOC: vca.md]`
+
+- `fps` — frame rate DIVISOR for duration computation. Default: `60`.
+- `frames` — frame count (DIVIDEND). Track duration = `frames / fps`
+  seconds. A keyframe `frame N` therefore means "at N ticks of 1/fps
+  seconds": with default fps 60, frame 12 = 0.2 s; with fps 30, frame 12 =
+  0.4 s. `[DOC + VERIFIED: engine source, DEFAULT_FPS = 60]`
+- `duration` — explicit duration in seconds; overrides `frames`. The
+  upstream docs note that keyframe curves REQUIRE `fps` (or `frames`) via
+  configure or explicit `duration`.
+- `rotation-order` — Euler application order (`XYZ`, `ZYX`, ...) for
+  `@rotate` lines, because file order is NOT honored. Default `XYZ`.
+
+**The dangerous default: a track with NO `configure` never ends.**
+`[VERIFIED: engine source]` The parser initializes duration to `math.huge`
+and only a `configure` directive (or explicit `duration`) shrinks it. The
+playback loop stops a track only when its timer exceeds duration — so a
+track without configure runs FOREVER, holding the pose of its last keyframe
+values (keyframe curves clamp to the last value; expression curves keep
+evaluating forever).
+
+This is not always a bug — it is a pattern: wooden_meat_game's `rip.vca`
+(death animation) intentionally has no configure, so the entity stays in its
+fallen pose permanently. For action clips (recoil, hits) the same default
+just means the clip freezes at its final values — which is harmless ONLY if
+the final values are the rest pose (0).
+
+DO end action keyframes at the rest pose (value 0) unless you intentionally
+freeze a pose.
+DO give looping idle/walk tracks either no configure plus `period` on each
+line, or a `configure` and a driver that loops (see core:animator).
+
+## Keyframe curves (curve const / linear / bezier)
+
+A keyframe curve drives `f(t)` by interpolating between `@key` directives in
+the directive's `{ ... }` block:
+
+```vca
+@rotate bone "body" by z curve linear {
+    @key frame 0 value 0
+    @key frame 6 value 45
+    @key frame 12 value 0
+}
+```
+
+Curve types: `[DOC: vca.md]`
+
+- `const` — no interpolation: the value jumps at each keyframe.
+- `linear` — piecewise-linear interpolation (the everyday choice).
+- `bezier` — cubic Bezier between keys with explicit tangents; a bezier key
+  carries `lx ly rx ry` — tangent handle OFFSETS relative to the key's own
+  frame (`lx`, `rx`) and value (`ly`, `ry`). `[VERIFIED: engine source,
+  codegen adds them to the key's frame/value]` Hand-writing bezier keys is
+  rare — exporters produce them.
+
+Each key needs `frame N` (in fps ticks) and `value V` (a number — EXCEPT the
+`@texture` directive, whose values are texture name strings, stepped
+const-style). `[DOC + VERIFIED]`
+
+Texture example from the upstream docs (slot `$0`, stepping between two
+faces of a tireman entity):
+
+```vca
+@texture name $0 {
+    @key frame 0 value entities/tireman:face_0
+    @key frame 24 value entities/tireman:face_1
+}
+```
+
+Looping one line: add `period N` (in frames) to wrap that line's time
+modulo N — useful for endless idle motions in a track without `configure`:
+
+```vca
+@move by y curve linear period 24 {
+    @key frame 0 value 0
+    @key frame 12 value 1
+    @key frame 24 value 0
+}
+```
+
+`[DOC: vca.md]`
+
+- Keyframes do NOT need to start at frame 0; before the first key the curve
+  clamps to the first value.
+- DO keep keyframe `frame` numbers ordered and within `frames` from
+  `configure` if you set one.
+
+## Expression curves (func)
+
+Instead of keyframes, a line can define `f(t) = value` directly, where `t`
+is time in SECONDS:
+
+```vca
+@move bone "antenna" by y func (sin(t * 2.5) * 0.1)
+```
+
+`[DOC: vca.md]`
+
+Expressions are transpiled into a Lua function body. Documented operators:
+`+ * / % ^`; constants `pi`, `e`. `[DOC]`
+
+The ACTUAL function set available inside VCA expressions (verified against
+the engine's codegen environment — this differs from the upstream doc!):
+`[VERIFIED: engine source, animation_codegen.lua]`
+
+| Available | Notes |
+| --- | --- |
+| `sqrt min max floor ceil abs sign round exp` | standard math |
+| `sin cos tan` | trigonometry (radians) |
+| `deg rad log log10` | unit conversion, logarithms |
+| `noise(x, octaves)` | 1D smooth pseudo-noise, range about -1..1 |
+| `pi e` | constants |
+| `t` | time in seconds (only in `func` lines) |
+| `kl kr` | left/right keyframe objects (`.value`, `.frame`) — only in custom curves |
+
+Documented but NOT actually available — using them raises a runtime nil-call
+error when the track plays: `[VERIFIED: engine source — not in the codegen
+environment]`
+
+- `rand(low, high)` — listed in `doc/*/vca.md`, absent from the codegen env.
+- `noise2d(x, y, octaves)` — the math library exports `noise2d`, but the
+  codegen binds a name that does not exist, so neither `noise2d` nor
+  `noise2` works in VCA expressions.
+
+DO verify any function beyond the table above with a quick in-engine test
+before relying on it — the upstream doc and the code disagree here.
+
+## Custom curves (@curve)
+
+Declare a reusable interpolation curve, then reference it with a leading
+dot: `[DOC: vca.md]`
+
+```vca
+@curve ease-in-out func (kl.value + (kr.value - kl.value) * (t * t * (3 - 2 * t)))
+
+@move bone "body" by y curve .ease-in-out {
+    @key frame 0 value 0
+    @key frame 12 value 1
+}
+```
+
+Inside `@curve func`, `t` is the 0..1 position BETWEEN the two neighboring
+keys, `kl`/`kr` are the left/right keyframes (`kl.value`, `kr.value`).
+`[DOC + VERIFIED]`
+
+## Units and transform semantics
+
+- `@rotate` values are **DEGREES**. The engine's `mat4.rotate` converts to
+  radians internally: `value 90` is a quarter turn. `[VERIFIED: engine
+  source, libmat4.cpp applies glm::radians]` (The upstream docs never state
+  the unit.)
+- `@move` values are in world blocks — the same units as skeleton node
+  offsets (see 10-entities.md). Values like `0.25` are typical for a recoil
+  kick; `hit.vca` below uses exactly that.
+- `@scale` and `@zoom` are multipliers (`1` = unchanged).
+- Multiple `@rotate` lines on one bone are applied in `rotation-order`
+  (default `XYZ`), NOT in file order. `[DOC + VERIFIED]`
+- Move/rotate/scale compose as a matrix applied to the bone's bind-pose
+  matrix each frame.
+
+## Playing tracks — animation.play
+
+The `animation` library (global) is small: `[DOC: libanimation.md,
+RU-only upstream]`
+
+```lua
+animation.play(name, target)  -- returns a playing-track handle
+animation.action(func)        -- run a coroutine outside pause, dies on world exit
+```
+
+`animation.play` in detail: `[VERIFIED: engine source, animation.lua]`
+
+```lua
+local handle = animation.play("guns/recoil", entity.skeleton)
+```
+
+- The target's pose is RESET (to bind pose) at play time, then re-reset and
+  re-applied EVERY frame while the track runs.
+- Returns a handle object with UNDOCUMENTED control methods:
+  `handle:stop()` (stop and reset timer), `handle:pause()`,
+  `handle:resume()`. `[OBSERVED: engine source]`
+- Playing a second track on the same target does not stop the first, but the
+  newer track applies LATER each frame and its pose reset wipes the older
+  track's output — in practice the last-played track wins visually.
+  `[VERIFIED: engine source, playback loop order]`
+- Playing an unknown name logs `animation track not found` and does nothing.
+
+Targets: `[DOC: animation.md, RU-only upstream]`
+
+```lua
+-- 1. An entity skeleton (the normal case):
+animation.play("mobs/imp_walk", entity.skeleton)
+
+-- 2. A camera:
+local camera = cameras.get(cameras.index("my_pack:cutscene_cam"))
+animation.play("cutscenes/flyover", camera)
+```
+
+Camera targets use directives WITHOUT `bone`: `@move`/`@rotate` drive the
+camera transform, `@zoom` drives zoom. `[DOC + VERIFIED: codegen camera path]`
+
+The first-person hand skeleton is also addressable via
+`gfx.skeletons.get("hand")` — same API surface as entity skeletons (see
+`doc/*/scripting/builtins/libgfx-skeletons.md`). `[DOC]`
+
+Where to call `play` from: any client-side Lua — component scripts
+(`health.lua` in wooden_meat_game plays `hit` when damaged), HUD scripts, or
+layout companion scripts (see 09-hud-and-ui.md). `[OBSERVED]`
+
+## Runtime behavior every author must know
+
+`[VERIFIED: engine source, animation.lua]` unless noted:
+
+- Tracks advance per RENDERED frame (`time.delta()` per frame), so playback
+  is a client-side visual only; pausing and world changes are handled by the
+  engine (tracks are unloaded with the world).
+- While a track runs, the target pose is reset to bind pose EVERY FRAME and
+  only the animated channels are applied on top. Manual bone edits (e.g.
+  `skeleton:set_matrix`) made elsewhere get overwritten while a track plays.
+- When a track ENDS (timer exceeds duration), the pose stays at the last
+  applied state — there is NO automatic return to rest. Either end your
+  keyframes at rest values, or call `entity.skeleton:reset_pose()` yourself.
+- There is no built-in "queue" or "on finish" callback. For state-driven
+  characters use `core:animator` (below) or drive tracks from your own
+  component.
+
+## core:animator — the built-in state machine
+
+For skeletons that switch between looping states (idle/walk/attack), the
+engine ships a component: `core:animator`. The upstream doc marks it as
+"under development" — treat its interface as provisional. `[DOC + OBSERVED:
+engine source, res/scripts/components/animator.lua]`
+
+What it does (from the engine's own script): `[VERIFIED: engine source]`
+
+- Maintains named STATES, each bound to a track name.
+- On `set_state(name, fade_time)` it cross-fades: the new state fades in and
+  the old one fades out over `fade_time` seconds using the track function's
+  `intensity` parameter (multiplier channels fade correctly, additive
+  channels scale toward 0).
+- On every render frame it resets the skeleton pose and evaluates ALL active
+  states, looping each track's time modulo its duration — so state tracks
+  loop automatically regardless of `configure`.
+
+DO use `core:animator` for mob-style looping states instead of hand-rolling
+play/stop bookkeeping; keep one-shot action clips (hit, death) on plain
+`animation.play` from your gameplay scripts, as wooden_meat_game does.
+
+Manual rig manipulation (no VCA at all) is also legitimate — the base
+pack's `player_animator` component positions the held item every frame with
+`rig:index("item")`, `rig:set_model(index, ...)`, `rig:set_matrix(index,
+mat4.rotate({0, 1, 0}, -80))`. Mix deliberately, not accidentally: while a
+VCA track plays, its per-frame pose reset erases manual `set_matrix` edits.
+
+## Real annotated examples (verbatim, wooden_meat_game)
+
+Registered in `content/my_pack/preload.json`:
+
+```json
+{
+    "animation": ["hit", "rip"]
+}
+```
+
+`hit.vca` — one-shot recoil on the `body` bone; NOTE: no `configure`, so the
+track technically runs forever while clamping to the last (rest) values:
+
+```vca
+@rotate bone "body" by y curve linear {
+    @key frame 0 value 0
+    @key frame 2 value 7
+    @key frame 6 value -7
+    @key frame 10 value 7
+    @key frame 12 value 0
+}
+
+@move bone "body" by y curve linear {
+    @key frame 0 value 0
+    @key frame 6 value 0.25
+    @key frame 12 value 0
+}
+```
+
+Line by line: `[OBSERVED]`
+
+- `@rotate ... by y` — yaw shake: +7 degrees at frame 2 (= 2/60 s at default
+  fps 60), over-corrects to -7, settles at 0 by frame 12 (= 0.2 s).
+- `@move ... by y` — a 0.25-block lift peaking mid-clip, back to 0.
+- Both lines end at value 0 — the rest pose — so the infinite-duration
+  default is harmless here.
+
+`rip.vca` — death clip that FREEZES the fallen pose on purpose:
+
+```vca
+@rotate bone "body" by x curve linear {
+    @key frame 0 value 0
+    @key frame 18 value 90
+}
+
+@move bone "body" by y curve linear {
+    @key frame 0 value 0
+    @key frame 18 value 0
+    @key frame 19 value -100
+}
+```
+
+- Rotates the body 90 degrees around X (falls over — degrees, as verified
+  above), then yanks it 100 blocks down at the last frame (sinks it out of
+  sight). No configure: the pose persists forever. That is the intended
+  "rest in peace" behavior.
+
+Playback, from the pack's health component:
+
+```lua
+animation.play("hit", entity.skeleton)
+```
+
+- Bare track name (flat namespace), entity skeleton as target. The full
+  component context is in 10-entities.md.
+
+## Pitfalls
+
+1. **Plural spellings.** Folder `animations/` or preload key `"animations"`
+   load nothing. The engine constant is `animation` (singular).
+   `[VERIFIED: engine source]` (Also listed in 08-pitfalls.md.)
+2. **Expecting pack prefixes.** `animation.play("my_pack:hit", ...)` finds
+   nothing — track names are bare preload entries in a flat global
+   namespace. `[VERIFIED: engine source]`
+3. **Inventing fields.** A typo in a directive or attribute name is a LOUD
+   parse error (`unknown directive ...`) the moment the pack loads — the
+   opposite of entity JSON, where unknown fields are silently ignored. But
+   attribute VALUE typos can stay silent: a wrong `by` letter computes and
+   applies nothing. `[VERIFIED: engine source]`
+4. **Bone name typos.** `skeleton:index(name)` returns nil for an unknown
+   bone; in the Lua fallback path nil becomes bone index 0 and the animation
+   silently animates the FIRST bone. No error is thrown. Check bone names
+   against your `skeletons/<name>.json`. `[VERIFIED: engine source]`
+5. **Trust the duration default.** Without `configure` the track never ends
+   (duration = infinity). For one-shot clips always end keyframes at rest
+   values — or the pose freezes mid-motion forever.
+6. **Playing a track that was never preloaded.** Preload silently skips
+   missing files; `play` then errors `animation track not found` at runtime.
+   Register the track in `preload.json` and check the spelling.
+7. **Assuming auto-return or auto-loop.** Neither exists in `animation.play`:
+   finished tracks keep their last pose, and looping only happens via
+   `period`, an infinite default, or core:animator's modulo.
+8. **Calling `rand`/`noise2d` in expressions.** They are documented upstream
+   but absent from the codegen environment — the track fails at play time.
+   Use the verified function table above. `[VERIFIED: engine source]`
+9. **Two same-channel lines on one bone.** The last one silently wins; split
+   complex motion across bones or merge keys into one line.
+
+## DO / AVOID summary
+
+- DO list every `.vca` in `preload.json` under `"animation"` (singular).
+- DO namespace track names (`"guns/recoil"`, `"mobs/imp_walk"`) — the
+  namespace is global and collision-prone.
+- DO put a `@configure` at the top when the track must END; end action clips
+  at rest values otherwise.
+- DO end keyframes at value 0 for one-shot clips unless freezing is intended.
+- DO use `core:animator` for looping character states; keep one-shots on
+  `animation.play`.
+- DO recheck bone names against the skeleton file — typos animate bone #0
+  silently.
+- AVOID `animations` (plural) anywhere: not the folder, not the key.
+- AVOID pack prefixes in `animation.play` names.
+- AVOID relying on `rand`, `noise2d` or any function outside the verified
+  expression table.
+- AVOID two lines of the same channel+axis on the same bone — the last one
+  silently replaces the first.
+
+## Upstream pointers (read before writing real animations)
+
+The paths below are files of the ENGINE's own repository
+(github.com/MihailRis/voxelcore, folder `doc/`) — NOT files of this guide.
+The Russian documentation is usually MORE complete and more current; when the
+two diverge, prefer `doc/ru/`:
+
+| Topic | English (`doc/en/`) | Russian (`doc/ru/`) — prefer this |
+| --- | --- | --- |
+| Animation system overview | — (no EN file) | `doc/ru/animation.md` |
+| VCA format reference | `doc/en/vca.md` | `doc/ru/vca.md` |
+| VCM syntax (shared grammar) | `doc/en/vcm.md` | `doc/ru/vcm.md` |
+| Skeletons, rigging, bone format | `doc/en/rigging.md` | `doc/ru/rigging.md` |
+| `animation.*` Lua API | — (no EN file) | `doc/ru/scripting/builtins/libanimation.md` |
+| Skeleton object API (`set_texture`, ...) | `doc/en/scripting/builtins/libgfx-skeletons.md` | `doc/ru/scripting/builtins/libgfx-skeletons.md` |
+| Camera targets (`cameras.*`) | `doc/en/scripting/builtins/libcameras.md` | `doc/ru/scripting/builtins/libcameras.md` |
+| Preload categories | `doc/en/assets-preload.md` | `doc/ru/assets-preload.md` |
+
+Where this guide's claims go beyond the upstream text (degrees in `@rotate`,
+the infinite-duration default, the flat namespace, the exact expression
+function table, the returned handle methods), they were verified against the
+engine's source code and Lua internals at the time of writing — re-verify
+against your engine version if behavior seems to differ.
+
+Real usage to learn from: `wooden_meat_game` `content/my_pack/` —
+`animation/hit.vca`, `animation/rip.vca`, `preload.json`, and
+`scripts/components/health.lua` (one `animation.play` call). The engine's
+own `res/scripts/components/animator.lua` is the reference implementation of
+the state-machine pattern.
 
 
-<!-- ===== docs/stubs/TODO-models.md ===== -->
+<!-- ===== docs/12-sounds.md ===== -->
 
-# STUB — 3D Models (NOT COVERED YET)
+# 12. Sounds and Audio (Preload, Playback, Streams)
 
-Status: **intentionally out of scope of this guide. TODO: write a full document.**
+> **MANDATORY PREREQUISITES — DO NOT SKIP.** This file assumes you have read
+> [01-engine-overview.md](01-engine-overview.md) AND
+> [08-pitfalls.md](08-pitfalls.md). 01 defines the ID rules, reserved names
+> and trust labels this file relies on; 08 lists the real failure modes
+> behind every DO/AVOID note. Skipping either is the most common reason
+> models generate broken packs from this guide. If you received only this
+> file, fetch and read both before writing any code.
 
-What belongs here when written: `models/` folder, VCM model format, OBJ usage,
-item models (`model-name` default `packid:itemname`), block custom models
-(`model: "custom"` + `model-name`), textures inside models (`blocks:name`
-references into the blocks atlas).
+This document covers the audio subsystem as seen from a content pack: which
+sound files a pack ships and how they are declared in `preload.json`, how
+short preloaded sounds differ from streamed audio, how playback is controlled
+through speaker ids and channels, and how block materials wire
+step/place/break/hit sounds. Read the pitfalls section even if you skim the
+API parts: the audio API fails SILENTLY (returns `0`, plays nothing, logs
+nothing) in more situations than any other subsystem in this guide, so a
+typo usually looks like "the code ran fine but there is no sound".
 
-Until this stub is replaced:
+Out of scope here: runtime audio generation (`audio.PCMStream`, mic input) —
+moved to 13-sound-creation.md. Authoring audio files in external tools and
+OpenAL backend internals are out of scope entirely.
 
-- DO NOT guess model file formats or conversion tooling.
-- What you MAY rely on from in-scope docs: items accept `model-name`
-  (auto-generated when omitted) `[DOC]`; blocks accept `model: "custom"` +
-  `model-name` without `<pack>:models/` prefix or extension `[DOC]`; model
-  textures must be `blocks:<name>` `[DOC]`.
-- Authoritative sources instead:
-  - `<voxelcore repo>/doc/ru/block-models.md`, `doc/ru/vcm.md`
-  - Real usage: `content/my_pack/models/*.vcm|*.obj` in
-    <https://github.com/George-Noise/wooden_meat_game>
+## Mental model: Sound vs Stream
+
+Two different playable objects exist, and picking the wrong one is the
+first pitfall:
+
+| Term | Meaning |
+| --- | --- |
+| Sound | Fully loaded into RAM at pack load; one asset can play from many speakers at once; requires a `preload.json` entry; addressed by a short NAME without extension |
+| Stream | Read from disk while playing; NOT preloaded, not stored in RAM; only one speaker per stream at a time; addressed by a FILE PATH with extension (or a shared alias) |
+| Speaker | One-shot playback controller with a unique integer id; destroyed when the audio finishes or `audio.stop()` is called; survives pause |
+| Channel | Volume/pause grouping: `master`, `ui`, `regular`, `ambient`, `music` |
+| PCMStream | Lua-side source of raw PCM data; can be `share()`d as a stream alias or turned into a Sound via `create_sound` (13-sound-creation.md) |
+
+`[DOC]` Decision rule:
+
+- short, repeatable effects (steps, shots, clicks) that may overlap with
+  themselves → preloaded Sound via `audio.play_sound` / `audio.play_sound_2d`
+- long audio (music, ambience, radio) that must not sit in RAM → Stream via
+  `audio.play_stream` / `audio.play_stream_2d`
+- audio generated at runtime → build a `audio.PCMStream`, then either
+  `share()` it as a stream or materialize a Sound with `create_sound`
+  (13-sound-creation.md)
+
+Formats: OGG (preferred) and WAV. WAV supports 8 and 16 bit only — 24 bit
+is not supported by OpenAL. `[DOC]`
+
+## Channels
+
+| Channel | Meaning |
+| --- | --- |
+| master | Controls the loudness of ALL other channels; NEVER pass it as a playback channel |
+| ui | Interface sounds; not paused together with the game |
+| regular | Default for world sounds; paused together with the game |
+| ambient | Same pause behavior as regular; intended for background/weather loops |
+| music | Music playback, typically streamed |
+
+`[DOC]` Three hard facts the table hides:
+
+- An UNKNOWN channel name behaves like `master`: the play call returns `0`
+  and nothing plays, with no error. `[VERIFIED: engine source, libaudio.cpp]`
+- `regular` (the default) pauses with the game; if you start an ambience
+  loop on the default channel it will freeze during pause — use `ambient`
+  or `music` for anything that should keep its state sensibly managed.
+- Screen switches RESET `regular` and `ambient` to empty: every speaker and
+  stream on them is stopped and destroyed (menu ↔ world transitions,
+  including the moment a world finishes opening — see Streams). `ui` and
+  `music` survive screen switches. `[VERIFIED: engine source,
+  Engine::setScreen]`
+
+## Shipping sounds: `preload.json` and the variants pattern
+
+Sound files live under the pack's `sounds/` folder. Declare them in the
+pack's `preload.json`: sounds are NOT loaded by default; a sound that is
+not preloaded cannot be played with `audio.play_sound` at all. `[DOC]` Two entry forms:
+
+```json
+{
+    "sounds": [
+        "events/explosion",
+        {
+            "name": "events/explosion",
+            "keep-pcm": true
+        }
+    ]
+}
+```
+
+- string form: `"sounds/<name>.ogg"` (or `.wav`) is loaded under the name
+  `<name>` — e.g. entry `"events/explosion"` loads
+  `sounds/events/explosion.ogg` and is played as `"events/explosion"`.
+- object form: adds `"keep-pcm": true`, which retains PCM data in memory
+  after decoding. Only needed if you access raw samples; otherwise omit it
+  (decoded PCM is the main RAM cost of a Sound). `[DOC]`
+
+### Variant pattern (multiple files under one name)
+
+Preload ONE logical name, ship several files; the engine collects them
+automatically. `[VERIFIED: engine source, assetload::sound]`
+
+| File present | Role |
+| --- | --- |
+| `name.ogg` | base sound (tried first) |
+| `name_0.ogg` | base sound if `name.ogg` is absent — numbering MAY start at 0 |
+| `name_1.ogg` .. `name_N.ogg` | variants, loaded until the FIRST missing number |
+| `name_2.ogg` with no `name_1.ogg` | NEVER loaded — a numbering gap silently ends the list |
+
+At play time the engine picks uniformly at random between the base sound
+and all variants — the base is one of the choices, not a guaranteed
+default. `[VERIFIED: engine source, audio.cpp]`
+
+Hard rules:
+
+1. Extensions are tried in order `.ogg`, then `.wav`; only ONE extension is
+   used for the base AND all its variants (decided by which file exists for
+   the base). `[VERIFIED: engine source]`
+2. If neither `name.ext` nor `name_0.ext` exists, pack loading FAILS with
+   `could not to find sound: sounds/<name>` — a typo in `preload.json`
+   breaks the whole pack, it does not degrade gracefully. `[VERIFIED]`
+3. Variant files must be MONO if the sound is played positionally (see the
+   stereo warning below).
+
+## Playing preloaded sounds: `audio.play_sound` / `_2d`
+
+```lua
+-- positional: audible from a point in the world, attenuates with distance
+audio.play_sound(
+    name,     -- preloaded sound NAME: no pack prefix, no "sounds/", no extension, no _N suffix
+    x, y, z,  -- world position of the source
+    volume,   -- 0.0 .. 1.0
+    pitch,    -- playback speed multiplier, positive (1.0 = normal)
+    -- optional:
+    channel,  -- "regular" (default) / "ambient" / "music" / "ui"
+    loop      -- false (default)
+) -> speakerid
+
+-- non-positional: same minus position; use for UI and menu sounds
+audio.play_sound_2d(name, volume, pitch, --[[ optional: ]] channel, loop)
+    -> speakerid
+```
+
+`[DOC: audio.md]` Name format is the #1 source of silent failures:
+
+| You pass | Result |
+| --- | --- |
+| `"shotgun"` | plays `pack sounds/shotgun.ogg` (assuming this pack preloaded it) |
+| `"steps/stone"` | plays preloaded `sounds/steps/stone.ogg` — subfolders are part of the name |
+| `"sounds/shotgun"` | SILENT no-op — the name never includes the folder root |
+| `"shotgun.ogg"` | SILENT no-op — no extension in the name |
+| `"other_pack:shotgun"` | SILENT no-op — `play_sound` does NOT understand pack prefixes |
+
+The returned speaker id is `0` in every failure case: unknown name, unknown
+channel, or the NoAudio backend (no audio device / `[audio] enabled=false`).
+`0` is a valid-looking integer — DO NOT treat it as an error by crashing;
+DO check it once when debugging "why is there no sound".
+`[VERIFIED: engine source, libaudio.cpp]`
+
+Real examples from `wooden_meat_game` (`content/my_pack/`,
+simplified to the audio calls): `[OBSERVED]`
+
+```lua
+-- scripts/shotgun.lua — local "2D" shot with two pitch layers
+function on_use(pid)
+    audio.play_sound_2d("shotgun", 0.5, 0.6)
+    audio.play_sound_2d("shotgun", 0.5, 0.4)
+end
+
+-- scripts/components/turret_targeting.lua — positional shot at a world point
+audio.play_sound("shotgun", start_pos[1], start_pos[2], start_pos[3], 0.6, 0.6)
+audio.play_sound("shotgun", start_pos[1], start_pos[2], start_pos[3], 0.6, 0.4)
+```
+
+Playing the same sound twice with slightly different `pitch` is a cheap
+layering trick that reads as one thicker shot. `[OBSERVED]`
+
+## Streams: `audio.play_stream` / `_2d`
+
+```lua
+audio.play_stream(
+    filename, -- stream address, SEE THE TABLE BELOW — NOT a preload name
+    x, y, z,  -- world position
+    volume,   -- 0.0 .. 1.0
+    pitch,    -- positive multiplier
+    -- optional:
+    channel,  -- "regular" (default) / "ambient" / "music" / "ui"
+    loop      -- false (default)
+) -> speakerid
+
+audio.play_stream_2d(filename, volume, pitch, --[[ optional: ]] channel, loop)
+    -> speakerid
+```
+
+`[DOC: audio.md]` Streams need NO `preload.json` entry — that is their
+point: the file is read from disk while playing, so a long OGG costs no
+RAM. `[DOC]` The stream address is resolved in THREE different ways, in
+this order: `[VERIFIED: engine source, libaudio.cpp — only the 2nd/3rd are
+in the upstream doc]`
+
+| Form | Example | Resolved as |
+| --- | --- | --- |
+| Shared alias | `"test-stream"` | A name published by `stream:share(alias)` at runtime (see 13-sound-creation.md) |
+| Entry-point path | `"my_pack:sounds/music.ogg"` | Literal file inside that pack — WITH extension |
+| Bare path | `"sounds/music.ogg"` | `paths.find()` across ALL packs by content-source priority — WITH extension, collision-prone |
+
+Hard rules for streams:
+
+1. ONE stream can play through only ONE speaker at a time. To restart a
+   music/ambience file, `audio.stop(old_id)` first — playing it again while
+   the old speaker lives is a silent mistake. `[DOC]`
+2. DO NOT preload long audio as Sounds: a 5-minute OGG as a Sound is fully
+   decoded into RAM and stays there. Sounds are for short effects; streams
+   are for anything measured in tens of seconds or minutes.
+3. A stream speaker is destroyed when the file finishes (unless looping) or
+   `audio.stop()` is called. Keep the returned id if you plan to touch
+   volume/position later. `[DOC]`
+4. On the NoAudio backend / headless mode the play calls return `0`; code
+   that stores and then uses the id must tolerate that.
+   `[VERIFIED: engine source]`
+
+Real pattern from `content/sfx/` in `wooden_meat_game` — an ambience pack
+that ships NO `preload.json` at all: `[OBSERVED]`
+
+```lua
+-- content/sfx/modules/ambient.lua (simplified)
+local BROWN = "sounds/pixabay.com_brown_noise___themediaguy-....ogg"
+
+function ambient.on_hud_open()
+    -- channel "ambient", loop=true, start almost muted
+    field_stream = audio.play_stream_2d(BROWN, 0.05, 1.0, "ambient", true)
+    wind_stream = audio.play_stream_2d(PINK, 0.0, 1.0, "ambient", true)
+end
+
+function ambient.on_world_tick()
+    -- ...gust state machine computes wind_volume...
+    audio.set_volume(wind_stream, wind_volume)
+end
+```
+
+Note the file naming: long unique filenames (source-prefixed) instead of a
+collision-free subfolder — same idea, protecting the BARE-path resolution
+from other packs. `[OBSERVED]`
+
+Also note that the example starts ambience from `scripts/hud.lua`
+(`on_hud_open`) — that is the only correct place for ambient loops, not a
+style choice. World-open sequence, from the engine source:
+
+1. `on_world_open` fires (world.lua context) while the level screen is
+   still being constructed.
+2. The level screen then finishes opening — the gap is the initial chunk
+   loading, observable as roughly half a second `[OBSERVED]` — and the
+   engine resets the `regular` AND `ambient` channels
+   (`Engine::setScreen`): every speaker and stream started in step 1 is
+   destroyed here, silently.
+3. `on_hud_open` fires AFTER the reset (hud.lua context), so loops started
+   there survive into gameplay.
+
+`[VERIFIED: engine source]` DO start all ambient/music world loops from
+`on_hud_open` and nowhere else. The same reset also wipes
+`regular`/`ambient` when the engine returns to the menu; `ui`/`music`
+channels survive screen switches.
+
+## Mono vs stereo — the positional audio trap
+
+> Sounds played through OpenAL in STEREO ignore the source position
+> entirely — they always render as if non-positional. Any sound you pass a
+> world position to (`audio.play_sound`, `audio.play_stream`) must be MONO.
+> `[DOC: audio.md WARNING]`
+
+This bites silently: a stereo file plays "fine" in `_2d` calls, then sounds
+mysterious when played positionally. DO export positional sounds in mono;
+keep stereo only for music/UI. DO test positional sounds from a distance,
+not standing on the source.
+
+## Controlling a speaker
+
+All functions take the integer speaker id returned by a play call. Calling
+anything on a dead/finished/never-existed id is a silent no-op — nothing
+throws. `[DOC]`
+
+| Function | Meaning |
+| --- | --- |
+| `audio.stop(id)` | Stop and destroy the speaker |
+| `audio.pause(id)` / `audio.resume(id)` | Pause / unpause (speaker survives pause) |
+| `audio.set_loop(id, state)` / `audio.is_loop(id)` | Looping flag / read it back (`false` if id is dead) |
+| `audio.set_volume(id, v)` / `audio.get_volume(id)` | 0.0..1.0 (`0.0` if id is dead) |
+| `audio.set_pitch(id, p)` / `audio.get_pitch(id)` | positive multiplier (`1.0` if id is dead) |
+| `audio.set_time(id, t)` / `audio.get_time(id)` | Position in SECONDS (`0.0` if id is dead) |
+| `audio.set_position(id, x, y, z)` / `audio.get_position(id)` | World position (`nil` if id is dead) |
+| `audio.set_velocity(id, x, y, z)` / `audio.get_velocity(id)` | Source velocity for the Doppler effect (`nil` if dead) |
+| `audio.get_duration(id)` | Length in seconds; `0` also means "unknown" (e.g. radio-style streams) |
+| `audio.count_speakers()` / `audio.count_streams()` | Diagnostics: live speakers / playing streams |
+
+`[DOC]` Usage notes:
+
+- Speaker ids start at 1, are never reused during the engine's lifetime,
+  and `0` means "nothing was created". Store the id (an integer), not any
+  reference. `[DOC]`
+- Start ambience streams MUTED (`volume 0.0`) and ramp `set_volume` from a
+  tick handler — this is exactly how the `sfx` pack animates wind gusts.
+  `[OBSERVED]`
+- For a moving source, update `set_position` periodically (e.g. from an
+  entity tick), otherwise the sound stays where it started.
+- `get_duration` returning `0` is NOT an error indicator — for generated
+  and radio-style streams the length is legitimately unknown. `[DOC]`
+
+## Sounds attached to blocks (materials)
+
+Block materials carry four sound names plus an absorption factor — this is
+how blocks get step/place/break/hit audio without any Lua
+(see 05-textures-and-assets.md for the materials system itself):
+
+```json
+{
+    "steps-sound": "steps/ground",
+    "place-sound": "blocks/ground_place",
+    "break-sound": "blocks/ground_break",
+    "hit-sound": "blocks/ground_hit",
+    "sound-absorption": 0.7
+}
+```
+
+`[VERIFIED: engine source + res/content/base/block_materials/ground.json]`
+
+Facts that save debugging time:
+
+1. These sounds are loaded AUTOMATICALLY by the engine for every material —
+   they do NOT need `preload.json` entries (the base pack's own preload
+   lists none of them). `[VERIFIED: engine source, AssetsLoader::addDefaults]`
+2. A material's sound name resolves inside the pack's `sounds/` folder:
+   `"steps/ground"` → `sounds/steps/ground.ogg` of the pack defining the
+   material — the `sounds/` root is added by the engine, you never write it
+   in the material. `[VERIFIED: engine source]`
+3. If `hit-sound` is omitted it FALLS BACK to `steps-sound`.
+   `[VERIFIED: engine source, ContentLoader::loadBlockMaterial]`
+4. `sound-absorption` (0..1) scales how loud block sounds are for this
+   material; stock values like `0.7` (ground) are a reference point.
+   `[OBSERVED: stock pack values]`
+5. The same `*-sound` keys are also accepted per-block in block JSON
+   (`Block.cpp` parses them for every block), but the material is the
+   primary mechanism the stock pack uses — prefer materials.
+   `[VERIFIED: engine source]`
+6. Sound names used in materials share the SAME flat global namespace as
+   `play_sound` names — two packs defining a material sound named
+   `"steps/stone"` collide (see Pitfalls #2).
+
+## Pitfalls (audio-specific)
+
+1. **Silent no-op instead of an error.** Unknown sound name, unknown
+   channel, dead speaker id, NoAudio backend — every one of these just
+   returns `0` / does nothing. When "sound doesn't play", FIRST verify the
+   returned speaker id and the exact name string before suspecting files.
+   `[VERIFIED]`
+2. **Flat global namespace.** Preload names are registered exactly as
+   written, with NO pack prefix, and later registrations overwrite earlier
+   ones; bare stream paths resolve across packs by priority. Two packs
+   shipping `"explosion"` (or `"sounds/explosion.ogg"` as a bare stream
+   path) will silently share/win by load order. DO namespace: put sounds in
+   a subfolder (`"events/my explosion"` is still one name — prefer
+   `"myevents/explosion"` style or unique long filenames like the `sfx`
+   pack does). `[VERIFIED: engine source]`
+3. **Wrong name format in `play_sound`.** No `sounds/` root, no extension,
+   no `_N` suffix, no pack prefix — any of those present means silence,
+   not an error. `[VERIFIED]`
+4. **Variant numbering gaps.** `name_1.ogg` + `name_3.ogg` without
+   `name_2.ogg` loads only `name_1.ogg` and stops at the gap — silently.
+   DO number variants densely from 0 or 1. `[VERIFIED: engine source]`
+5. **Stereo positional sound.** Stereo files ignore world position. A
+   positional effect must be mono; test from a distance. `[DOC]`
+6. **`master` as a channel.** `audio.play_sound_2d("click", 1.0, 1.0,
+   "master")` plays nothing. Channels are `ui`/`regular`/`ambient`/`music`
+   only. `[VERIFIED: engine source]`
+7. **24-bit WAV.** OpenAL path supports 8/16-bit WAV only; a 24-bit file
+   fails to load (breaking pack load if preloaded). DO convert to 16-bit
+   WAV or OGG. `[DOC]`
+8. **Restarting a stream while it plays.** One stream file = one speaker;
+   call `audio.stop(old_id)` before playing the same file again, or keep
+   ONE long-lived looping speaker and control it via volume.
+   `[DOC]`
+9. **Missing preloaded file breaks pack load.** `"could not to find sound"`
+   is a hard failure at load time. Keep preload entries and files in sync.
+   `[VERIFIED: engine source]`
+10. **Ambience on the wrong channel.** Loops started on the default
+    `regular` channel pause with the game; background weather/music belongs
+    on `ambient`/`music`. `[DOC]`
+11. **Starting ambience in `on_world_open`.** The `regular` and `ambient`
+    channels are reset when the level screen opens — moments after
+    `on_world_open` fires (the gap is the initial chunk loading, ~0.5 s
+    observed). Any loop started there is silently destroyed. DO start
+    ambience in `on_hud_open` (hud.lua). `[VERIFIED: engine source,
+    Engine::setScreen]`
+12. **Typos in material sound names degrade silently.** A material's
+    `steps-sound` that matches no file does not break pack load (unlike
+    preload entries) — the step sound is simply missing in game. DO copy
+    names from your `preload.json`/file tree, not from memory.
+    `[VERIFIED: material sounds are engine-requested assets]`
+
+## DO / AVOID summary
+
+- DO use preloaded Sounds for short effects and Streams for long audio.
+- DO name preloaded sounds exactly `name` / `subfolder/name` — no pack
+  prefix, no `sounds/` root, no extension, no `_N`.
+- DO namespace sound and stream names across packs (subfolder or unique
+  long filenames); the namespace is flat and collision-prone.
+- DO ship positional effects in MONO and test them from a distance.
+- DO keep variant numbering dense (`name.ogg` or `name_0.ogg`, then
+  `name_1..N` without gaps).
+- DO start long loops muted and ramp volume from a tick handler.
+- DO start ambient/music world loops from `on_hud_open` (hud.lua), never
+  from `on_world_open` — the level-screen reset wipes `regular` and
+  `ambient` moments after the world opens.
+- AVOID `preload.json` entries for block-material sounds — the engine
+  requests them automatically.
+- AVOID passing `master` (or an invented channel) to any play call.
+- AVOID preloading minutes-long audio as Sounds (RAM) — stream it.
+- AVOID re-playing a stream file while its previous speaker is alive.
+- AVOID trusting that a play call succeeded — check the speaker id while
+  debugging, the API never raises on failure.
+
+## Upstream pointers (read before writing real audio code)
+
+All paths are files in the VoxelCore engine repository
+(github.com/MihailRis/voxelcore), NOT in this guide. The Russian docs are
+usually richer and fresher — prefer `doc/ru/` when they disagree.
+
+| Topic | EN | RU |
+| --- | --- | --- |
+| Audio system, channels, speaker semantics, full `audio.*` API | `doc/en/audio.md` | `doc/ru/audio.md` |
+| Preload entries, `keep-pcm`, sound variants note | `doc/en/assets-preload.md` | `doc/ru/assets-preload.md` |
+| Block material fields (`steps-sound`, ...) | `doc/en/block-properties.md` | `doc/ru/block-properties.md` |
+| Backend/engine config (`[audio] enabled=false`) | `doc/en/console.md` | `doc/ru/console.md` |
+
+Where this guide goes beyond the upstream text (the three stream address
+forms, the silent `0`-return contract, the flat namespace and overwrite
+behavior, the variant-gap rule, the automatic loading of material sounds,
+the `hit-sound` fallback, the screen-switch channel reset and the
+world-open event order), the claims were verified against the engine
+source at the time of writing — re-verify against your engine version if
+behavior seems to differ.
+
+Real usage to learn from: `wooden_meat_game` — `content/my_pack/`
+(`preload.json` `"sounds": ["shotgun"]`, `scripts/shotgun.lua`,
+`scripts/components/turret_targeting.lua`) for preloaded sounds, and
+`content/sfx/` (`modules/ambient.lua` started from `scripts/hud.lua`, no
+preload at all) for streams, volume automation and the `on_hud_open`
+ambience pattern.
 
 
-<!-- ===== docs/stubs/TODO-entities.md ===== -->
+<!-- ===== docs/13-sound-creation.md ===== -->
 
-# STUB — Entities & Skeletons (NOT COVERED YET)
+# 13. Creating Audio at Runtime (PCMStream, Mic Input)
 
-Status: **intentionally out of scope of this guide. TODO: write a full document.**
+> **MANDATORY PREREQUISITES — DO NOT SKIP.** This file assumes you have read
+> [01-engine-overview.md](01-engine-overview.md),
+> [08-pitfalls.md](08-pitfalls.md) AND
+> [12-sounds.md](12-sounds.md). 01 defines the ID rules and trust labels
+> this guide relies on; 08 lists the real failure modes behind every
+> DO/AVOID note; 12 defines the Sound vs Stream mental model, channels,
+> speaker semantics and the stream address resolution rules this file
+> builds on. If you received only this file, fetch and read all three
+> before writing any code.
 
-What belongs here when written: `entities/*.json` definitions, entity
-properties, `skeletons/*.json`, ECS components in `scripts/components/`,
-spawning from items (spawn-egg pattern).
+This document covers GENERATING audio inside the engine instead of shipping
+recorded files: building an `audio.PCMStream` in Lua, feeding raw PCM
+samples into it, publishing it as a playable stream alias or materializing
+it as a Sound, plus microphone input. Use it when the audio does not exist
+as a file: synthesized tones and noise, DSP-processed signals, audio
+received from the network or the microphone, anything computed at runtime.
+If the audio already exists as an OGG/WAV file, ship the file and use
+`preload.json` / `play_stream` (12-sounds.md) — that path is simpler,
+cheaper and covers the overwhelming majority of packs.
 
-Until this stub is replaced:
+## When to generate audio instead of shipping files
 
-- DO NOT guess entity property names or the component API.
-- What you MAY rely on from in-scope docs: `config/defaults.toml` can bind
-  `player-entity` (stock: `"base:player"`) `[OBSERVED]`; blocks/items can
-  reference entities only through Lua (out of scope).
-- Authoritative sources instead:
-  - `<voxelcore repo>/doc/ru/entity-properties.md`
-  - `<voxelcore repo>/doc/ru/scripting.md` + `doc/ru/scripting/core_components.md`
-  - Real usage: `content/my_pack/entities/`, `skeletons/`, `scripts/components/`
-    in <https://github.com/George-Noise/wooden_meat_game>
+`[DOC]` Generate at runtime only when one of these holds:
+
+- the audio is computed (sirens, tones, noise beds, procedural effects);
+- the audio arrives from outside the pack (network stream, microphone);
+- you must process an existing sound in ways files cannot express.
+
+Everything else is a file + `preload.json` problem. Runtime generation
+costs CPU, RAM and code, and its failure modes are silent like all audio
+failures (12-sounds.md Pitfalls #1).
+
+## `audio.PCMStream`: the object
+
+| Member | Meaning |
+| --- | --- |
+| `audio.PCMStream(sample_rate, channels, bits)` | Constructor: sample rate in Hz; `channels`: 1 = mono, 2 = stereo; `bits`: 8 or 16 |
+| `stream:feed(data)` | Append PCM bytes (a `Bytearray`) to the stream buffer |
+| `stream:share(alias)` | Publish the stream under an alias address for `audio.play_stream` |
+| `stream:create_sound(name)` | Materialize the PCM fed SO FAR into a Sound registered under `name` |
+
+`[DOC: audio.md]` Verified semantics the upstream doc does not spell out:
+
+1. `share(alias)` stores the stream in the asset registry that
+   `audio.play_stream` consults FIRST, before pack paths — the shared-alias
+   row of the stream address table in 12-sounds.md.
+   `[VERIFIED: engine source, libaudio.cpp]`
+2. On the headless backend `share()` is a silent no-op: the alias is NOT
+   registered and playback would return `0` anyway. Do not expect
+   generated audio to work in headless test runs.
+   `[VERIFIED: engine source, lua_type_pcmstream.cpp]`
+3. `create_sound(name)` registers a normal multi-speaker Sound under `name`
+   in the SAME flat global namespace as preloaded sounds — playable with
+   `audio.play_sound(name)` with NO `preload.json` entry, and subject to
+   the same overwrite-on-collision rule (12-sounds.md Pitfalls #2).
+   `[VERIFIED: engine source, lua_type_pcmstream.cpp]`
+4. `create_sound(name)` captures only the samples fed BEFORE the call;
+   feeding afterwards does not change the created Sound.
+   `[VERIFIED: engine source]`
+5. A second `share()` or `create_sound()` with the same string silently
+   replaces the earlier registration — there is no error and no merge.
+   `[VERIFIED: engine source]`
+
+## Sample format rules
+
+| Parameter | Rule |
+| --- | --- |
+| `sample_rate` | integer Hz (e.g. 44100); must match your sample-count math |
+| `channels` | 1 = mono, 2 = stereo — positional playback REQUIRES mono (12-sounds.md) |
+| `bits` | 8 or 16 only |
+| 16-bit samples | write through `I16view` (or `U16view`) over the `Bytearray`, never as raw bytes |
+| Buffer size | `bits / 8` bytes per sample per channel (`2` for 16-bit mono) |
+
+`[DOC]` 24-bit (or wider) PCM has no place anywhere in the audio system:
+24-bit WAV is unsupported by OpenAL (12-sounds.md), and `PCMStream` accepts
+8/16 bits only.
+
+## Worked example: a generated tone
+
+`[DOC: audio.md]` Minimal working example from the upstream doc (formatting
+normalized):
+
+```lua
+local max_amplitude = 32767
+local sample_rate = 44100
+local total_samples = sample_rate * 5
+local bytes = Bytearray(total_samples * 2)
+local samples = I16view(bytes)
+
+for i = 1, total_samples do
+    samples[i] = math.sin(i * math.pi * 2 / sample_rate * 400) * max_amplitude
+end
+
+local stream = audio.PCMStream(sample_rate, 1, 16)
+stream:feed(bytes)
+stream:share("test-stream")
+
+audio.play_stream_2d("test-stream", 1.0, 1.0, "ui")
+```
+
+What it does, step by step:
+
+- allocates a `Bytearray` of `total_samples * 2` bytes — 5 s of 16-bit mono;
+- writes a 400 Hz sine through `I16view` (never raw bytes for 16-bit);
+- feeds the buffer into a `PCMStream(44100, 1, 16)` and publishes it as the
+  alias `"test-stream"`;
+- plays it as a non-positional stream on the `ui` channel.
+
+To materialize the same buffer as a Sound instead (multi-speaker, played by
+name): `[OBSERVED: API shape per engine source]`
+
+```lua
+stream:create_sound("my_pack:tone")
+audio.play_sound_2d("my_pack:tone", 1.0, 1.0)
+```
+
+## `share()` vs `create_sound()`
+
+| | `share(alias)` | `create_sound(name)` |
+| --- | --- | --- |
+| Played via | `audio.play_stream` (alias resolved first) | `audio.play_sound` |
+| Speaker model | ONE speaker per stream at a time | Many speakers at once |
+| RAM | backend reads the buffer as it plays | fully buffered as a Sound |
+| Live updates | you can keep `feed()`ing while it plays | frozen at call time |
+
+`[VERIFIED: engine source]` Decision rule follows the 12-sounds.md mental
+model: repeated one-shots → `create_sound`; long, generated or
+still-growing audio → `share`. The upstream doc explicitly names network
+audio streaming as the intended use of the PCMStream interface — feeding
+while playing (radio-style) is the designed pattern, not a hack. `[DOC:
+audio.md]`
+
+## Naming: the namespaces you are writing into
+
+- Shared aliases and created-sound names are runtime REGISTRY keys, not
+  files; they never appear in `preload.json`.
+- DO prefix BOTH with your pack id (`"my_pack:tone"`): aliases resolve
+  before file paths and created sounds share the flat preload namespace —
+  an unprefixed name can collide with another pack's file or sound and be
+  silently overwritten (12-sounds.md Pitfalls #2). `[VERIFIED: engine
+  source]`
+- An alias shadows a bare file path with the same string at resolution
+  time; resolution order is fixed (12-sounds.md Streams table).
+
+## Microphone input (pointer only)
+
+`audio.input.request_open(callback)` asks the user for recording permission
+and passes an access token to the callback; `audio.input.fetch(token,
+max_read_size)` then returns new PCM chunks you can `feed()` into a
+PCMStream. This is niche for content packs and gated by user consent — read
+`doc/ru/audio.md` ("Запись звука") before using. `[DOC]`
+
+## Pitfalls (creation-specific)
+
+1. **Unprefixed alias or sound name.** Both registries are flat global
+   namespaces with silent overwrite on collision — DO prefix with the pack
+   id. `[VERIFIED: engine source]`
+2. **Headless `share()` no-op.** Generated aliases do not register on the
+   headless backend; automated test runs will silently have no generated
+   audio. `[VERIFIED: engine source, lua_type_pcmstream.cpp]`
+3. **Feeding after `create_sound`.** The Sound is a snapshot of the buffer
+   at call time; late feeds change nothing. Keep feeding only streams you
+   published with `share()`. `[VERIFIED: engine source]`
+4. **Raw byte writes to 16-bit samples.** Use `I16view`/`U16view` over the
+   `Bytearray`; byte-wise writes produce garbage. `[DOC]`
+5. **Stereo PCM for positional playback.** Stereo ignores source position
+   (12-sounds.md) — generated positional audio must be built with
+   `channels = 1`. `[DOC]`
+6. **`get_duration` returns `0` for shared streams.** The length of
+   generated audio is legitimately unknown to the engine; not an error.
+   `[DOC]`
+
+## DO / AVOID summary
+
+- DO ship OGG/WAV files whenever the audio exists as a file; generate only
+  what cannot be shipped.
+- DO prefix shared aliases and created-sound names with the pack id.
+- DO write 16-bit samples via `I16view`/`U16view` over the `Bytearray`.
+- DO keep one long-lived PCMStream and keep feeding it for radio-style
+  audio — that is the intended pattern, not a hack.
+- AVOID `share()`ing and expecting it to work in headless test runs.
+- AVOID feeding after `create_sound()` and expecting the Sound to change.
+- AVOID unprefixed names (flat namespaces, silent overwrites).
+- AVOID stereo PCM for positional playback.
+
+## Upstream pointers (read before writing real audio code)
+
+All paths are files in the VoxelCore engine repository
+(github.com/MihailRis/voxelcore), NOT in this guide. The Russian docs are
+usually richer and fresher — prefer `doc/ru/` when they disagree.
+
+| Topic | EN | RU |
+| --- | --- | --- |
+| `audio.PCMStream`, mic input, generation example | `doc/en/audio.md` | `doc/ru/audio.md` |
+
+Where this guide goes beyond the upstream text (the registry semantics of
+`share`/`create_sound`, the headless `share()` no-op, the snapshot-at-call
+rule, the overwrite-on-collision behavior), the claims were verified
+against the engine source (`lua_type_pcmstream.cpp`, `libaudio.cpp`,
+`Assets.hpp`) at the time of writing — re-verify against your engine
+version if behavior seems to differ.
+
+
+<!-- ===== docs/14-models.md ===== -->
+
+# 14. Models (VCM, OBJ, Custom Block and Item Models)
+
+> **MANDATORY PREREQUISITES — DO NOT SKIP.** This file assumes you have read
+> [01-engine-overview.md](01-engine-overview.md) AND
+> [08-pitfalls.md](08-pitfalls.md). 01 defines the ID rules, reserved names
+> and trust labels this file relies on; 08 lists the real failure modes
+> behind every DO/AVOID note. For the block `texture-faces` order read
+> [03-blocks.md](03-blocks.md); for entity/skeleton usage read
+> [10-entities.md](10-entities.md). If you received only this file, fetch
+> and read the prerequisites before writing any code.
+
+This document covers 3D models shipped by a content pack: the `models/`
+folder, the VCM text format, OBJ usage, custom block models, item models
+and VCM-embedded skeletons. Models are what make a block look non-cubic,
+an item appear in the player's hand, and an entity take shape.
+
+## Where model files live and how names resolve
+
+| Fact | Detail |
+| --- | --- |
+| Folder | `models/` in the pack folder — engine constant `MODELS_FOLDER` `[VERIFIED: engine source]` |
+| Asset name | the file stem: `models/box.vcm` → model `"box"` |
+| Extension order | `.vec3` → `.obj` → `.xml` → `.vcm` — first EXISTING file wins `[VERIFIED: engine source, assetload::model]` |
+| Missing file | hard failure `could not to find model "<name>"` — breaks pack/world load `[VERIFIED: engine source]` |
+| Bare-name resolution | `paths.find()` across ALL packs by content-source priority — flat, collision-prone namespace, same idea as sounds |
+
+Rules:
+
+1. `.vec3` and `.xml` are legacy engine formats. DO NOT create them in
+   packs; ship VCM or OBJ only. `[DOC]`
+2. Model names containing `:` are NEVER auto-loaded for blocks, items or
+   entities — the loader skips them (they exist for engine-internal
+   assets). A pack CANNOT write `other_pack:model` into `model-name` and
+   expect it to load. `[VERIFIED: engine source, AssetsLoader::addDefaults]`
+3. Consequence of rule 2: model names are bare and global. Two packs
+   shipping `models/box.vcm` means the higher-priority pack's file wins
+   for BOTH, silently. DO make model names unique — subfolder-style names
+   work: `"turret/base"` loads `models/turret/base.vcm`.
+   `[VERIFIED: engine source]`
+4. `preload.json` has a `"models"` key for EXPLICIT preloading:
+   `"models": ["name", {"name": "name", "squash": true}]`. Only needed
+   for multi-part (boned) VCMs you want usable as ONE model — see VCM
+   bones. Models referenced by blocks/items/skeletons load automatically.
+   `[VERIFIED: engine source]`
+
+## Who triggers loading (auto-requests)
+
+| Referenced by | Auto-load rule |
+| --- | --- |
+| Block variant `"model": "custom"` + `"model-name"` | requested when the name has no `:` |
+| Item `"model-name"` | requested when the name has no `:` |
+| Entity `"skeleton-name"` | requested as a MODEL (expected: VCM with bones) when the name has no `:` |
+| `skeletons/*.json` bone `"model"` fields | model per bone, name stripped of the `.<bone>` suffix |
+| `preload.json` `"models"` | loaded explicitly at startup |
+
+`[VERIFIED: engine source, AssetsLoader::addDefaults + assetload::skeleton]`
+
+## Block custom models
+
+Block JSON (full block reference in 03-blocks.md):
+
+```json
+{
+    "model": "custom",
+    "model-name": "destroyer_belt"
+}
+```
+
+`model-name` is read ONLY when `"model"` is `"custom"` — on any other model
+type it is ignored. `[VERIFIED: user first-hand]`
+
+| `model` value | Meaning |
+| --- | --- |
+| none | invisible block |
+| block | default cube (default) |
+| xsprite | X-shape (grass) |
+| aabb | box shaped as the block hitbox |
+| custom | custom model via `model-name` |
+
+`[VERIFIED: engine source, Block.hpp]` A typo in the `model` value is logged
+(`unknown model: <value>`) and the block silently becomes `none` —
+invisible, NO load error. `[VERIFIED: engine source, BlockLoader]`
+
+The `"model-primitives"` JSON property still works but is officially
+deprecated in favor of VCM — DO NOT use it in new packs.
+`[DOC: block-models.md WARNING]`
+
+### Textures inside models
+
+| Texture string | Resolved as |
+| --- | --- |
+| `$0` .. `$5` | the BLOCK's own texture-faces, SAME order as the texture-faces JSON |
+| `blocks:<name>` | texture from the blocks atlas (UVs remapped into the atlas region) |
+| bare name (`models/box`) | standalone texture auto-loaded from `textures/<name>` of the packs |
+
+`[VERIFIED: engine source, ModelsGenerator + ContentGfxCache +
+request_textures]` `$N` binding is a BLOCK-model mechanism — in item or
+skeleton models a `$N` mesh texture is never bound (see Item models).
+
+Verified details:
+
+- Box sides default to `$0`..`$5`; tri/rect default to `$0`.
+- `$N` with N outside 0..5 stays unbound — silently no texture.
+- A bare texture name without `textures/<name>.png` is logged at load and
+  the mesh stays untextured — NOT a hard failure.
+  `[VERIFIED: engine source, assetload::texture]`
+
+Scale: one block = 1.0 unit; a block custom model should fit the
+1×1×1 cube (the example `box.vcm` spans 0..1). Coordinates are NOT
+normalized. `[OBSERVED: stock and example packs]`
+
+## VCM format
+
+A text format describing a model from primitives; replaces the deprecated
+`model-primitives`. Syntax: `@primitive attr (v1,v2,...) attr2 "string" {
+nested... }` — think XML without a single root; multiple root elements are
+allowed. `[DOC: vcm.md]`
+
+> By default texture coordinates derive from primitive sizes. Above 1.0
+> the result is UNDEFINED and may change between engine versions — use
+> `region` or `region-scale`. `[DOC: vcm.md NOTE]`
+
+### `box`
+
+```vcm
+@box from (0, 0, 0) to (1, 1, 1) texture "entities/nepis" {
+    @part tags (north) texture "entities/nepis_face"
+}
+```
+(from `wooden_meat_game`, `models/nepis.vcm` — an entity texture example)
+
+| Property | Meaning |
+| --- | --- |
+| from / to | opposite corners of the box |
+| origin | rotation pivot; default: box center |
+| rotate | degrees per axis `(45,0,0)` or quaternion `(x,y,z,w)` |
+| texture | texture for ALL sides; default: `$0`..`$5` per side |
+| shading | `shading off` disables shading |
+| delete | remove sides by name: top, bottom, east, west, north, south |
+
+`@part` (nested in `box`) overrides per-side properties:
+
+| Property | Meaning |
+| --- | --- |
+| tags | sides to affect: top, bottom, east, west, north, south |
+| texture | side texture; default: `$<side index>` |
+| region / region-scale | UV region inside the chosen texture |
+
+Side indices match the texture-faces order `[VERIFIED: engine source,
+vcm.cpp side_indices]`:
+
+| Index | Side | Face |
+| --- | --- | --- |
+| 0 | west | −X |
+| 1 | east | +X |
+| 2 | bottom | −Y |
+| 3 | top | +Y |
+| 4 | north | −Z |
+| 5 | south | +Z |
+
+### `rect` (parallelogram)
+
+| Property | Meaning |
+| --- | --- |
+| from | start point |
+| right / up | X and Y vectors — also define width/height |
+| texture / region / region-scale | as above; default `$0` |
+| shading / flip / normal / cull-face | `flip v` mirrors the UV region vertically |
+
+### `tri` (triangle)
+
+| Property | Meaning |
+| --- | --- |
+| a / b / c | corner points, e.g. `a (0,0,0)` |
+| uv | six numbers, 2 per point: `uv (0,0, 1,0, 1,1)` |
+| texture / region / region-scale | as above; default `$0` |
+| shading / normal / cull-face | as above |
+
+Tri UVs do NOT depend on shape or size (unlike rect/box). `[DOC]`
+
+Shared primitive properties `[DOC: vcm.md]`:
+
+| Property | Meaning |
+| --- | --- |
+| `shading off` | disable shading on the primitive |
+| `normal (x,y,z)` | override the normal vector |
+| `cull-face front` / `cull-face off` | which side is culled; `off` = two-sided |
+
+## VCM bones (a skeleton inside the model)
+
+`@bone` wraps primitives and other bones `[DOC: vcm.md]`:
+
+- WITH `name` → enters the model's skeleton (rigging-compatible).
+- WITHOUT a name → "dissolved": its transforms apply to children, nothing
+  enters the skeleton.
+- A `root` bone is created automatically for the whole model.
+- Bone properties: `move`, `scale` (applied BEFORE move), `rotate`.
+
+Verified consequences `[VERIFIED: engine source, load_vcm_model]`:
+
+1. A VCM with named bones (more than one part, not squashed) stores its
+   parts as `<model>.<bone>` assets plus a skeleton under the bare model
+   name — and NO single model under the bare name. DO NOT reference such
+   a model from a block or item: the model will not be found. Use it as
+   an entity skeleton (10-entities.md) instead.
+2. `"squash": true` in `preload.json` merges the VCM back into ONE model
+   under the bare name — usable as a block/item model, no skeleton.
+3. Unnamed bones keep the model single-part — safe for blocks/items.
+
+## OBJ
+
+Verified against the engine's parser, the supported subset is: `v`, `vn`,
+`vt`, `f` and `usemtl`. `[VERIFIED: engine source, obj.cpp]`
+
+- `usemtl <name>` — the name IS the texture reference (same three forms:
+  `$N` / `blocks:name` / bare name). MTL FILES ARE NOT PARSED — `mtllib`
+  lines are ignored and no `.mtl` file is needed. Real example:
+  `my_pack/models/shotgun.obj` (a Blender 4.0.2 export) references
+  `shotgun.mtl` that is not even shipped; its `usemtl Material` resolves
+  to `textures/Material.png`, which is shipped. `[OBSERVED]`
+- A bare texture name with no `textures/<name>.png` logs an error at load
+  and the mesh stays untextured (not a hard failure).
+  `[VERIFIED: engine source, assetload::texture]`
+- Models are used at their authored scale; block custom models should fit
+  the 1×1×1 cube. `[OBSERVED]`
+
+## Item models
+
+`model-name` on an item (04-items.md) selects the 3D model shown in the
+player's hand: the engine's own `hud.lua` renders `item.model_name(id)` on
+the hand bone. `[VERIFIED: engine source + res/scripts/hud.lua]`
+
+| Case | Model used |
+| --- | --- |
+| No `model-name` | a GENERATED model stored as `<packid>:<item>.model`: block-icon items reuse the block's model (scaled to 0.2); sprite-icon items get a flat quad textured with the icon |
+| `"model-name": "shotgun"` | `models/shotgun.*` of the packs, auto-loaded (no `:` in the name) |
+
+`[VERIFIED: engine source, ModelsGenerator + ItemDef]` The generated
+default name contains `:`, so it is never file-loaded — it exists only as
+the generated asset. `[VERIFIED]`
+
+Real example (`wooden_meat_game`, `content/my_pack/items/shotgun.json`):
+`[OBSERVED]`
+
+```json
+{
+    "icon-type": "sprite",
+    "icon": "items:shotgun",
+    "stack-size": 1,
+    "model-name": "shotgun"
+}
+```
+
+## Models and entities
+
+- ALL files in a pack's `skeletons/` folder are auto-loaded as skeletons
+  named `<packid>:<file stem>` — no preload entry needed.
+  `[VERIFIED: engine source]`
+- Entity `skeleton-name` defaults to the entity's own id — so entity
+  `my_pack:turret` automatically picks up the skeleton `my_pack:turret`
+  from `skeletons/turret.json`. That name coincidence is how the example
+  pack wires its turret and nepis models without any explicit field.
+  `[VERIFIED: engine source, Entities.cpp]`
+- `skeleton-name` may also point at a bare VCM name — the engine then
+  expects a VCM WITH bones and requests it as a model.
+  `[VERIFIED: engine source]`
+- A missing skeleton: WARNING if the name equals the entity id, hard
+  ERROR otherwise. `[VERIFIED: engine source, Entities.cpp]`
+- Skeleton bones reference models by name (stripped of the `.<bone>`
+  suffix) and those models auto-load — `skeletons/turret.json` pulls
+  `models/turret.vcm` and `models/shotgun.obj`. `[VERIFIED: engine source,
+  assetload::skeleton]`
+
+Stock example: `res/content/base/entities/falling_block.json` uses
+`"skeleton-name": "base:block"`. `[OBSERVED]` Bone ANIMATION is covered in
+11-animation.md; the skeleton JSON format in 10-entities.md and
+`doc/ru/rigging.md`.
+
+## Pitfalls (models-specific)
+
+1. **Missing model file breaks world load.** `could not to find model`
+   is a hard failure for any auto-requested or preloaded model. Keep
+   references and files in sync. `[VERIFIED: engine source]`
+2. **Flat global namespace with no pack prefix.** Bare model names resolve
+   across packs by priority; a colliding name silently shadows another
+   pack's model — and you CANNOT fix it with `pack:name` (auto-load skips
+   `:` names). DO use unique names or subfolders.
+   `[VERIFIED: engine source]`
+3. **`model-name` on a non-custom block.** Read only when
+   `"model": "custom"`; otherwise ignored. `[VERIFIED: user first-hand]`
+4. **Typo in the `model` value.** Logged as `unknown model` and the block
+   becomes `none` — invisible, no load error. Copy values from this table,
+   not from memory. `[VERIFIED: engine source]`
+5. **Named-bone VCM as a block/item model.** Such a file stores parts as
+   `<model>.<bone>` and NO model under the bare name — the block/item
+   model is missing. DO use `"squash": true` or keep bones unnamed.
+   `[VERIFIED: engine source]`
+6. **`$N` outside 0..5 or outside block models.** Silently unbound — no
+   texture, no error. `[VERIFIED: engine source]`
+7. **Expecting MTL materials.** The OBJ parser never reads `.mtl`;
+   `usemtl` names are texture asset names. `[VERIFIED: engine source]`
+8. **VCM UVs beyond 1.0.** Undefined per upstream; use `region` /
+   `region-scale`. `[DOC]`
+9. **Missing model textures fail silently.** Logged at load, mesh stays
+   untextured. Check the log when a model renders untextured.
+   `[VERIFIED: engine source]`
+10. **Legacy extensions.** `.vec3`/`.xml` win over `.vcm` in the extension
+    order — an old file with the same stem silently overrides your VCM.
+    DO NOT ship them in packs. `[VERIFIED: engine source]`
+
+## DO / AVOID summary
+
+- DO ship `.vcm` (or `.obj`) under `models/` with unique names (subfolders
+  count as part of the name).
+- DO use `$0`..`$5` in block custom models to reuse the block's
+  texture-faces; `blocks:name` for atlas textures; bare names only with a
+  matching file under `textures/`.
+- DO keep block/item models single-part; use named bones only for entity
+  skeletons.
+- DO export OBJ without expecting `.mtl` to be read; name `usemtl` after
+  your texture.
+- AVOID `model-primitives` in new packs (deprecated by VCM).
+- AVOID `:` inside your own model names (auto-load skips them).
+- AVOID default UVs beyond 1.0 — use `region` / `region-scale`.
+- AVOID shipping `.vec3`/`.xml` models in packs.
+
+## Upstream pointers (read before writing real models)
+
+All paths are files in the VoxelCore engine repository
+(github.com/MihailRis/voxelcore), NOT in this guide. The Russian docs are
+usually richer and fresher — prefer `doc/ru/` when they disagree.
+
+| Topic | EN | RU |
+| --- | --- | --- |
+| VCM format, primitives, bones | `doc/en/vcm.md` | `doc/ru/vcm.md` |
+| Deprecated `model-primitives` | `doc/en/block-models.md` | `doc/ru/block-models.md` |
+| Skeleton/rigging format | `doc/en/rigging.md` | `doc/ru/rigging.md` |
+| Entity `skeleton-name` | `doc/en/entity-properties.md` | `doc/ru/entity-properties.md` |
+
+Where this guide goes beyond the upstream text (extension order, auto-load
+rules, the flat namespace and the `:` skip, texture binding `$N` /
+`blocks:` / bare name, the single-part storage rule, MTL behavior, item
+model generation), the claims were verified against the engine source
+(`AssetsLoader`, `assetload_funcs`, `vcm.cpp`, `obj.cpp`, `ModelsGenerator`,
+`ContentGfxCache`, `Entities`) at the time of writing — re-verify against
+your engine version if behavior seems to differ.
+
+Real usage to learn from: `wooden_meat_game` — `content/my_pack/models/`
+(`box.vcm`, `nepis.vcm`, `turret.vcm`, `shotgun.obj`), `skeletons/`
+(`turret.json`, `nepis.json`), `items/shotgun.json`, `textures/`
+(`Material.png`, `models/`, `items/`); engine stock `res/models/`
+(`block.vec3`, `drop-item.vec3`, `human.vcm`) and
+`res/content/base/entities/falling_block.json` (`skeleton-name`).
+
+
+<!-- ===== docs/08-pitfalls.md ===== -->
+
+# 08. Pitfalls and Pre-flight Checklist
+
+> **MANDATORY PAIR — DO NOT SKIP.** This file assumes you have read
+> [01-engine-overview.md](01-engine-overview.md) (ID rules, reserved names,
+> trust labels). Every other document in this guide also assumes you have
+> read THIS file. If you received only this file, fetch and read 01 before
+> writing any code.
+
+Every entry below is a real failure mode — either documented upstream, thrown
+by the engine, or observed in real packs. Treat each AVOID as a hard rule.
+
+## Fatal mistakes
+
+1. **Editing `content.json`.** It is auto-generated and used to convert world
+   saves. Manual edits corrupt worlds irreversibly (upstream warning).
+   AVOID creating, editing, or deleting it in source repos.
+2. **Missing `package.json`.** A folder without it is not a pack — the scanner
+   skips it. DO always start from the manifest.
+3. **Invalid pack ID.** Outside `a-z0-9_`, starting with a digit, or shorter
+   than 2 / longer than 24 chars breaks registration. Reserved IDs (`res`,
+   `user`, `world`, `project`, `config`, `core`) are unavailable. `[VERIFIED]`
+4. **`texture-faces` with fewer than 6 entries.** The engine throws
+   "texture-faces requires 6 elements" and the pack fails to load.
+   `[OBSERVED: engine source]`
+5. **Using `texture` and `texture-faces` together.** Documented as incompatible;
+   pick one. `[DOC]`
+6. **Paths or extensions in texture names.** `"texture": "blocks/dirt.png"` is
+   wrong. The value is a NAME resolved inside an atlas: `"dirt"` or
+   `"blocks:dirt"` depending on context. `[VERIFIED]`
+7. **Using `base:*` properties without depending on `base`.** `base:durability`
+   and `base:loot` are registered by the `base` pack; without
+   `"dependencies": ["base"]` they are not guaranteed to exist. `[VERIFIED]`
+8. **Loot referencing a block instead of its item.** `base:loot[].item` needs an
+   ITEM id; a block's item is `<pack>:<block>.item`. `[VERIFIED]`
+
+## Likely-wrong assumptions (seen in practice)
+
+9. **Assuming folder name = pack ID.** The engine keys packs by the `"id"` in
+   `package.json`; the folder name is free-form and has NO meaning to the
+   engine. In real packs the folder name almost always DIFFERS from the ID
+   (e.g. folder `kompot_0f9103ff-1.2.2` ships `"id": "kompot"`), and exact
+   matches are rare. NEVER infer a pack's ID from its folder name — read the
+   manifest. `[OBSERVED]`
+10. **Assuming `icon.png` must be 128x128.** It is a recommendation; 64x64 and
+    210x208 exist in working packs. Keep it square. `[OBSERVED]`
+11. **Assuming texture sizes are enforced.** Stock uses 16x16; other sizes are
+    uncharted. DO stay 16x16 for blocks/items.
+12. **Assuming `version` matters for pack resolution.** When two sources carry
+    the same pack ID, priority decides; version is ignored. `[DOC]`
+13. **Assuming a pack needs content.** A folder containing ONLY `package.json`
+    is a complete, valid, loadable pack — nothing else is required. Blocks,
+    items, textures, config and code are all optional extras (Kompot ships no
+    blocks/items; confirmed first-hand). `[VERIFIED]`
+14. **Inventing dependency version operators.** Only `@>=x.y` and `*` are
+    documented. AVOID `<`, `<=`, `=`, ranges. `[DOC]`
+15. **Capitalizing captions yourself.** Docs recommend lowercase captions; the
+    engine upper-cases for display. Localization keys must match the lowercase
+    caption string. `[DOC]`
+16. **Preloading auto-loaded assets.** Block/item atlas textures are picked up
+    automatically; preloading them is noise (upstream warns to keep preload
+    minimal). `[DOC]`
+17. **Putting `pack_id:` into `<image src>` or `menu.page`.** These do NOT use
+    the pack namespace: `src` without a colon is a global texture name; `src`
+    with a colon is `atlas_name:tile_name`; `menu.page` takes a bare page name
+    scanned across all packs. Pack-qualified ids belong only to layout ids
+    (`hud.show_overlay("pack:layout")`) and document paths
+    (`gui.load_document`). See 09-hud-and-ui.md. `[VERIFIED]`
+18. **Spelling the animation folder or preload key `animations`.** The engine
+    constant is `animation` (singular): pack folder `animation/`, `preload.json`
+    key `"animation"`. An upstream quirk you must reproduce. `[VERIFIED]`
+    The full animation reference is 11-animation.md.
+
+## JSON hygiene
+
+- AVOID trailing commas and comments — block/item files are strict JSON.
+- DO keep UTF-8 (localization values are non-ASCII routinely).
+- DO keep one definition per file; the file name is the content name.
+
+## Pre-flight checklist (run before delivering a pack)
+
+Manifest:
+- [ ] `package.json` exists, parses, has `id`/`title`/`version`.
+- [ ] `id` passes rules and is not reserved. Folder name is free-form — it
+      does NOT need to equal `id`.
+- [ ] `dependencies` lists every pack whose `pack:` references you use.
+
+Content:
+- [ ] Every `blocks/*.json` and `items/*.json` uses only properties documented
+      in 03/04 (or upstream docs) — nothing invented.
+- [ ] `texture-faces` arrays have exactly 6 entries in west/east/bottom/top/
+      north/south order.
+- [ ] No `texture` + `texture-faces` in the same block.
+- [ ] Every texture/icon name resolves to a real PNG in `textures/blocks/` or
+      `textures/items/`.
+- [ ] `base:*` properties used only with `base` dependency; loot items use
+      `.item` suffix where needed.
+
+Assets & config:
+- [ ] `icon.png` present at pack root (square).
+- [ ] `preload.json` (if present) contains only genuinely needed entries.
+- [ ] `texts/*.txt` keys match captions exactly (lowercase, spaces not
+      underscores).
+- [ ] No `content.json` committed from your side.
+
+UI (09):
+- [ ] Layout XMLs sit at `layouts/*.xml` (flat folder); menu pages at
+      `layouts/pages/`.
+- [ ] No pack id in `menu.page` names or in `<image src>` values.
+- [ ] Animation folder/key spelled `animation` (singular), if used.
+
+Runtime:
+- [ ] Pack loads without errors in the engine log/console.
+- [ ] Blocks appear in the content/inventory screen and place correctly.
+- [ ] Loot drops, lights emit, plants sit on ground — as designed.
+
+## Debugging hints
+
+- Load errors are printed by the engine with the failing pack and file name
+  (e.g. unknown model, JSON parse errors, missing textures render as
+  `notfound`). Read the console output first. `[OBSERVED]`
+- A pack that loads but shows missing textures/`notfound` icons indicates a
+  name/folder mismatch (03/05 rules), not a manifest problem.
+- The in-game console and engine logging are documented in the engine repo
+  (`doc/ru/console.md`, mirrored as `doc/en/console.md`) — out of scope here.
+
+
+<!-- ===== docs/06-walkthrough.md ===== -->
+
+# 06. Walkthrough: Build a Complete Minimal Pack
+
+> **MANDATORY PREREQUISITES — DO NOT SKIP.** This file assumes you have read
+> [01-engine-overview.md](01-engine-overview.md) AND
+> [08-pitfalls.md](08-pitfalls.md). 01 defines the ID rules, reserved names
+> and trust labels this file relies on; 08 lists the real failure modes
+> behind every DO/AVOID note. Skipping either is the most common reason
+> models generate broken packs from this guide. If you received only this
+> file, fetch and read both before writing any code.
+
+Goal: a working pack `my_first_pack` that adds:
+- block `my_first_pack:ruby_ore` — a stone-like ore cube,
+- block `my_first_pack:ruby_lamp` — a glowing cube,
+- block `my_first_pack:ruby_flower` — a decorative plant,
+- item `my_first_pack:ruby` — a plain sprite item,
+- a pack icon.
+
+No Lua, no models, no sounds — pure declarative content. Every file below is
+complete and final; assemble them in order and the pack works.
+
+## Step 0 — Choose the location
+
+DO develop in the user content folder so any world can use the pack:
+
+```text
+$HOME/.voxeng/content/my_first_pack/
+```
+
+(Linux path; `user:content` source, priority above `res:content` — see
+02-pack-structure.md.) The folder name is free-form — it does NOT need to
+match the pack ID (real packs rarely match). This walkthrough uses the ID as
+the folder name purely for tidiness.
+
+## Step 1 — package.json (pack becomes loadable)
+
+File: `my_first_pack/package.json`
+
+```json
+{
+    "id": "my_first_pack",
+    "title": "My First Pack",
+    "version": "0.1.0",
+    "creator": "Your Name",
+    "description": "Ruby ore, lamp, flower and a ruby item",
+    "dependencies": ["base"]
+}
+```
+
+`dependencies: ["base"]` is REQUIRED here because the blocks below use
+`base:durability` and `base:loot` (properties registered by `base`).
+
+STOP and verify: the pack must already appear in the engine's content menu with
+no other files at all.
+
+## Step 2 — Textures
+
+Create two folders and four PNG files, 16x16, RGBA:
+
+```text
+textures/blocks/ruby_ore.png
+textures/blocks/ruby_lamp.png
+textures/blocks/ruby_flower.png
+textures/items/ruby.png
+```
+
+Any 16x16 pixel-art works while prototyping. The file names become the texture
+names (`ruby_ore`, ...). No `.json` needed for textures — the atlases pick PNGs
+up automatically (see 05).
+
+## Step 3 — The ore block
+
+File: `blocks/ruby_ore.json`
+
+```json
+{
+    "texture": "ruby_ore",
+    "material": "base:stone",
+    "base:durability": 3.0,
+    "base:loot": [
+        {"item": "my_first_pack:ruby", "min": 1, "max": 2, "chance": 1.0}
+    ]
+}
+```
+
+Notes:
+- `"texture"` — single texture on all 6 faces (order not relevant here).
+- `"material": "base:stone"` — reuses base's sounds; no sound files needed.
+- loot drops the ITEM `my_first_pack:ruby` defined in Step 6.
+
+## Step 4 — The lamp block
+
+File: `blocks/ruby_lamp.json`
+
+```json
+{
+    "texture": "ruby_lamp",
+    "material": "base:glass",
+    "emission": [14, 4, 4],
+    "light-passing": true,
+    "base:durability": 0.5
+}
+```
+
+`emission` channels are 0..15; `[14, 4, 4]` is strong red. This block drops
+itself when broken: blocks without `base:loot` default to dropping their own
+generated item (stock stone/dirt behave this way `[OBSERVED]`).
+
+## Step 5 — The flower block (crossed sprite)
+
+File: `blocks/ruby_flower.json`
+
+```json
+{
+    "texture": "ruby_flower",
+    "material": "base:grass",
+    "model": "X",
+    "draw-group": 1,
+    "light-passing": true,
+    "obstacle": false,
+    "replaceable": true,
+    "grounded": true,
+    "hitbox": [0.15, 0.0, 0.15, 0.7, 0.5, 0.7],
+    "base:durability": 0.0,
+    "base:loot": []
+}
+```
+
+This is the stock flower recipe: `model X` + no obstacle + replaceable + grounded
++ draw-group 1. `"base:loot": []` means it drops nothing (vs. default self-drop).
+
+## Step 6 — The ruby item
+
+File: `items/ruby.json`
+
+```json
+{
+    "icon-type": "sprite",
+    "icon": "items:ruby",
+    "stack-size": 64
+}
+```
+
+`"icon": "items:ruby"` points at `textures/items/ruby.png` from Step 2. This
+item is inert (no `placing-block`, no script) — it is a material/crafting-style
+resource.
+
+## Step 7 — Pack icon
+
+Save a square PNG as `icon.png` at the pack root (128x128 recommended).
+
+## Step 8 — Enable and test
+
+1. Launch the engine.
+2. Create or open a world; open the content selection and enable
+   **My First Pack** (its dependency `base` is required for any world anyway).
+3. In game: give items through the inventory/content screen, place the ore,
+   break it — the ruby item drops; place the lamp — the area lights red; place
+   the flower on top of a full block.
+
+## Final file tree
+
+```text
+my_first_pack/
+├── package.json
+├── icon.png
+├── blocks/
+│   ├── ruby_ore.json
+│   ├── ruby_lamp.json
+│   └── ruby_flower.json
+├── items/
+│   └── ruby.json
+└── textures/
+    ├── blocks/
+    │   ├── ruby_ore.png
+    │   ├── ruby_lamp.png
+    │   └── ruby_flower.png
+    └── items/
+        └── ruby.png
+```
+
+(`content.json` appears next to `package.json` after the pack loads — generated
+by the engine. AVOID touching it.)
+
+## Extensions beyond this walkthrough
+
+- Per-face textures → `texture-faces` (03-blocks.md).
+- Localization of captions → `texts/ru_RU.txt` with `ruby ore=рубиновая руда`
+  (05-textures-and-assets.md).
+- Behavior (drop-on-use, ticking) → Lua scripts, out of scope; see stubs and
+  then the engine's `doc/ru/scripting.md`.
+
+## Verification checklist
+
+- [ ] `package.json` parses as JSON (no trailing commas, no comments).
+- [ ] `id` passes the character/length rules and is not reserved (the folder
+      name may be anything — equality with `id` is not required).
+- [ ] Every `texture`/`icon` name has a matching PNG in the right folder.
+- [ ] Every `pack:` reference points to an existing pack (dependency declared).
+- [ ] `base:*` properties are used only with `"base"` in dependencies.
+- [ ] No `content.json` in your source files (engine generates it).
+
+
+<!-- ===== docs/07-example-repos.md ===== -->
+
+# 07. Annotated Breakdown of Real Repositories
+
+> **MANDATORY PREREQUISITES — DO NOT SKIP.** This file assumes you have read
+> [01-engine-overview.md](01-engine-overview.md) AND
+> [08-pitfalls.md](08-pitfalls.md). 01 defines the ID rules, reserved names
+> and trust labels this file relies on; 08 lists the real failure modes
+> behind every DO/AVOID note. Skipping either is the most common reason
+> models generate broken packs from this guide. If you received only this
+> file, fetch and read both before writing any code.
+
+Two real-world repositories are referenced by this guide. Read this file to map
+their structure onto the concepts, and to know which of their folders are OUT OF
+SCOPE of this guide.
+
+- Game project: <https://github.com/George-Noise/wooden_meat_game>
+- UI pack: <https://github.com/George-Noise/fork_of_kompot>
+
+Both are unfinished but load and run; they are referenced as *structure
+evidence*, not as style guides.
+
+## wooden_meat_game — a game project wrapping several packs
+
+Top level is a **project**, not a pack (projects are an excluded topic — see
+docs/stubs/TODO-projects-worldgen.md):
+
+```text
+wooden_meat_game/
+├── project.toml            # project manifest
+├── project_client.lua      # project-level client script   (out of scope)
+├── start.lua               # project entry script           (out of scope)
+├── voxelcore_types.lua     # Lua type annotations           (out of scope)
+└── content/                # project:content source — packs live here
+```
+
+`project.toml`:
+
+```toml
+name = "wooden_meat_game"
+title = "Wooden Meat Game"
+base_packs = ["base", "kompot", "wooden_meat_menu"]
+permissions = []
+```
+
+`base_packs` lists packs enabled by default; they resolve against
+`project:content` (this repo's `content/`) and lower-priority sources.
+`[OBSERVED]`
+
+### Packs inside content/
+
+| Folder | id in package.json | Lesson |
+| --- | --- | --- |
+| `kompot_0f9103ff-1.2.2/` | `kompot` | **Folder name ≠ pack ID** — engine reads the ID from package.json `[OBSERVED]` |
+| `my_pack/` | `my_pack` | Title differs from id: "Simple Box and Gun" — fine |
+| `sfx/` | `vd_ambient_sfx` | Folder `sfx`, id `vd_ambient_sfx` — again ≠ |
+| `vd_belt_system/` | `vd_belt_system` | Conventional 1:1 naming (recommended default) |
+| `wooden_meat_menu/` | `wooden_meat_menu` | Declares `"dependencies": ["kompot"]` `[OBSERVED]` |
+
+Vendored-pack naming (`kompot_<hash>-<version>`) is a human-organization trick;
+the engine only sees id `kompot`.
+
+### my_pack — what is in scope
+
+```text
+my_pack/
+├── package.json            # id "my_pack", version "0.0.1"
+├── icon.png                # 210x208 — icon size is not enforced
+├── content.json            # auto-generated (items/entities lists)
+├── items/
+│   ├── shotgun.json
+│   ├── spawn_nepis.json
+│   └── spawn_turret.json
+├── textures/
+│   └── items/              # shotgun.png, nepis.png, turret.png → items atlas
+├── preload.json
+├── scripts/ ...            # Lua event handlers (out of scope)
+├── entities/ ...           # IN SCOPE — see 10-entities.md
+├── models/ ...             # out of scope
+├── animation/              # IN SCOPE — hit.vca, rip.vca (see 11-animation.md)
+├── sounds/                 # IN SCOPE — shotgun.ogg (see 12-sounds.md)
+```
+
+`package.json` has no `dependencies` yet references only its own content —
+correct, because it does not use `base:*` properties.
+
+`items/shotgun.json`:
+
+```json
+{
+    "icon-type": "sprite",
+    "icon": "items:shotgun",
+    "stack-size": 1,
+    "model-name": "shotgun"
+}
+```
+
+Takeaways (all `[OBSERVED]`):
+- Sprite icon `"items:shotgun"` ↔ file `textures/items/shotgun.png`.
+- `stack-size: 1` for a weapon; `model-name: "shotgun"` pulls
+  `models/shotgun.obj`.
+- `items/spawn_nepis.json` has only `icon-type`+`icon` — the rest of behavior
+  lives in `scripts/spawn_nepis.lua` (handler `on_use_on_block(...)` calls
+  `entities.spawn`; the full spawn-egg pattern is covered in 10-entities.md).
+- `preload.json` preloads only non-auto assets, with keys `animation` (NOTE the
+  singular spelling — engine constant), `sounds`, `textures`: two animations
+  (dissected in 11-animation.md), one sound (see 12-sounds.md), two effect
+  textures (see 05).
+- Note the absence of `blocks/` — a pack is NOT required to define blocks.
+
+## fork_of_kompot — a pack distributing a Lua framework
+
+Kompot is a declarative-UI framework pack ("Jetpack-Compose-like") distributed
+AS a content pack. Kompot's own framework internals stay out of scope, but the
+engine-side HUD/UI mechanics its files use (`scripts/hud.lua`, `layouts/`,
+`config/bindings.toml`) are now covered in 09-hud-and-ui.md. `[OBSERVED]`
+throughout.
+
+```text
+fork_of_kompot/
+├── package.json            # id "kompot", version "1.2.2", "license": "MPL-2.0"
+├── icon.png
+├── preload.json            # 28 font entries + 2 custom atlases
+├── modules/                # Lua libraries: modules/kompot.lua + modules/kompot/...
+├── scripts/hud.lua         # HUD entry script — on_hud_open() (see 09)
+├── layouts/                # gallery.xml + gallery.xml.lua (layout + companion script, see 09)
+├── config/bindings.toml    # [kompot] gallery = "key:f12"
+├── texts/                  # en_US.txt, ru_RU.txt — incl. dotted keys
+├── fonts/                  # IBM Plex TTFs (out of scope)
+├── textures/               # UI skin/icons textures (out of scope)
+├── annotations/            # editor/LLM Lua annotations (out of scope)
+├── docs/, art/, LICENSES/, CHANGELOG.md, README.md   # repo hygiene, engine ignores
+```
+
+Takeaways relevant to pack authors:
+
+- `package.json` extra field `"license"` is tolerated (engine ignores unknown
+  fields). Metadata for humans goes fine there.
+- A pack CAN ship pure code/assets with zero blocks and zero items — Kompot has
+  no `blocks/` or `items/` folder at all.
+- `preload.json` fonts use object entries:
+  `{"name": "kompot_12", "path": "fonts/IBMPlexSans-Regular.ttf", "size": 12}`
+  — font NAMES are how other content references them.
+- `config/bindings.toml` binds a pack action to a key:
+  ```toml
+  [kompot]
+  gallery = "key:f12"
+  ```
+- Localization files mix content-caption style keys and dotted keys:
+  `kompot.gallery=Kompot / Gallery`.
+- Consuming packs declare `"dependencies": ["kompot"]` and call its modules via
+  `require "kompot:kompot"` — modules are namespaced by pack id (Lua topic).
+
+## Which files in these repos are engine-relevant vs ignored
+
+Engine-relevant (affect loading/content): `package.json`, `icon.png`,
+`preload.json`, `content.json` (generated), `blocks/`, `items/`,
+`block_materials/`, `textures/`, `texts/`, `config/`, plus the out-of-scope
+content folders listed in 02.
+
+Ignored by the engine (repo hygiene, safe to keep for humans/LLMs): `README.md`,
+`CHANGELOG.md`, `LICENSE`, `LICENSES/`, `docs/`, `art/`, `annotations/`,
+`*.toml` at project level. DO keep them — they cost nothing and help everyone.
+
+## When to copy what
+
+- Starting a new pack → copy the *shape* of `my_pack` (minimal + only needed folders).
+- Need items with behavior → look at `my_pack/items/*` + its scripts, then read
+  engine scripting docs before writing your own.
+- Need the game-shell around packs → that is a project; out of scope, see stub.
+- Need UI → Kompot's own docs (`docs/` inside fork_of_kompot) are the entry point.
 
 
 <!-- ===== docs/stubs/TODO-projects-worldgen.md ===== -->
 
 # STUB — Projects & World Generators (NOT COVERED YET)
+
+> **MANDATORY PREREQUISITES — DO NOT SKIP.** Any pack code you write must
+> follow [01-engine-overview.md](../01-engine-overview.md) and
+> [08-pitfalls.md](../08-pitfalls.md). Read both before authoring anything,
+> even for topics listed in this stub.
 
 Status: **intentionally out of scope of this guide. TODO: write full documents.**
 

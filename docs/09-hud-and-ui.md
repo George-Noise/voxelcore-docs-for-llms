@@ -1,5 +1,13 @@
 # 09. HUD and UI Basics (layouts, pages, overlays)
 
+> **MANDATORY PREREQUISITES — DO NOT SKIP.** This file assumes you have read
+> [01-engine-overview.md](01-engine-overview.md) AND
+> [08-pitfalls.md](08-pitfalls.md). 01 defines the ID rules, reserved names
+> and trust labels this file relies on; 08 lists the real failure modes
+> behind every DO/AVOID note. Skipping either is the most common reason
+> models generate broken packs from this guide. If you received only this
+> file, fetch and read both before writing any code.
+
 This document covers the PACK-SIDE mechanics of shipping UI: where layout files
 live, how the engine registers and addresses them, and the ways to put them on
 screen. It intentionally does NOT duplicate the full XML element reference or
@@ -15,12 +23,12 @@ Blocks and items live in ONE namespaced registry (`pack_id:name`, see
 THREE different addressing schemes (document ids, menu page names, texture
 names; the document-id scheme comes in two flavors, see rows 1–2):
 
-| What you write                            | Scheme                       | Example                  |
-| ----------------------------------------- | ---------------------------- | ------------------------ |
-| Layout document id (`hud.*`)              | `pack_id:file_stem`, derived by the engine | `kompot:gallery` |
+| What you write | Scheme | Example |
+| --- | --- | --- |
+| Layout document id (`hud.*`) | `pack_id:file_stem`, derived by the engine | `kompot:gallery` |
 | Document alias (`gui.load_document` arg 2, iframe `src`) | any alias YOU invent | `my_pack:extra_panel` |
-| Menu page name (`menu.page`)              | bare name, NO pack id        | `settings`               |
-| `<image src>` texture                     | global name OR `atlas:tile`  | `gui/error`, `blocks:dirt` |
+| Menu page name (`menu.page`) | bare name, NO pack id | `settings` |
+| `<image src>` texture | global name OR `atlas:tile` | `gui/error`, `blocks:dirt` |
 
 DO memorize this table. The most common LLM errors are putting `pack_id:` into
 `menu.page` or `<image src>`, or omitting it in `hud.show_overlay`. `[VERIFIED]`
@@ -423,15 +431,15 @@ Each topic exists twice: `doc/en/` (English) and `doc/ru/` (Russian). The
 Russian documentation is usually MORE complete and more current; when the two
 diverge, prefer `doc/ru/`. File names match on both sides:
 
-| Topic                                        | English (`doc/en/`)                    | Russian (`doc/ru/`) — prefer this |
-| -------------------------------------------- | -------------------------------------- | -------------------------------------- |
-| FULL XML element and attribute reference     | `doc/en/xml-ui-layouts.md`             | `doc/ru/xml-ui-layouts.md`             |
-| Element properties/methods from Lua          | `doc/en/scripting/ui.md`               | `doc/ru/scripting/ui.md`               |
-| `gui.*` API (dialogs, documents, templates)  | `doc/en/scripting/builtins/libgui.md`  | `doc/ru/scripting/builtins/libgui.md`  |
-| `hud.*` API                                  | `doc/en/scripting/builtins/libhud.md`  | `doc/ru/scripting/builtins/libhud.md`  |
-| Input callbacks and key codes                | `doc/en/scripting/builtins/libinput.md`| `doc/ru/scripting/builtins/libinput.md`|
-| `on_hud_open` and other events               | `doc/en/scripting/events.md`           | `doc/ru/scripting/events.md`           |
-| `menu.page`, main-menu replacement           | `doc/en/projects.md`                   | `doc/ru/projects.md`                   |
+| Topic | English (`doc/en/`) | Russian (`doc/ru/`) — prefer this |
+| --- | --- | --- |
+| FULL XML element and attribute reference | `doc/en/xml-ui-layouts.md` | `doc/ru/xml-ui-layouts.md` |
+| Element properties/methods from Lua | `doc/en/scripting/ui.md` | `doc/ru/scripting/ui.md` |
+| `gui.*` API (dialogs, documents, templates) | `doc/en/scripting/builtins/libgui.md` | `doc/ru/scripting/builtins/libgui.md` |
+| `hud.*` API | `doc/en/scripting/builtins/libhud.md` | `doc/ru/scripting/builtins/libhud.md` |
+| Input callbacks and key codes | `doc/en/scripting/builtins/libinput.md` | `doc/ru/scripting/builtins/libinput.md` |
+| `on_hud_open` and other events | `doc/en/scripting/events.md` | `doc/ru/scripting/events.md` |
+| `menu.page`, main-menu replacement | `doc/en/projects.md` | `doc/ru/projects.md` |
 
 Also in the engine repository:
 

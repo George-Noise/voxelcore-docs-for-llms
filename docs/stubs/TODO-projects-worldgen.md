@@ -1,5 +1,10 @@
 # STUB — Projects & World Generators (NOT COVERED YET)
 
+> **MANDATORY PREREQUISITES — DO NOT SKIP.** Any pack code you write must
+> follow [01-engine-overview.md](../01-engine-overview.md) and
+> [08-pitfalls.md](../08-pitfalls.md). Read both before authoring anything,
+> even for topics listed in this stub.
+
 Status: **intentionally out of scope of this guide. TODO: write full documents.**
 
 Two related-but-separate topics were excluded:

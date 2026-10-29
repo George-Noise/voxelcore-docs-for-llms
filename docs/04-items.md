@@ -1,5 +1,13 @@
 # 04. Items Reference
 
+> **MANDATORY PREREQUISITES — DO NOT SKIP.** This file assumes you have read
+> [01-engine-overview.md](01-engine-overview.md) AND
+> [08-pitfalls.md](08-pitfalls.md). 01 defines the ID rules, reserved names
+> and trust labels this file relies on; 08 lists the real failure modes
+> behind every DO/AVOID note. Skipping either is the most common reason
+> models generate broken packs from this guide. If you received only this
+> file, fetch and read both before writing any code.
+
 Item definitions are JSON files in `items/` of the pack. The file name defines
 the content name: `items/shotgun.json` in pack `my_pack` becomes
 `my_pack:shotgun`. `[VERIFIED]`
@@ -31,8 +39,8 @@ Real game pack, `my_pack:shotgun` (wooden_meat_game):
     "model-name": "shotgun"
 }
 ```
-`model-name: "shotgun"` resolves to `my_pack:models/shotgun.obj` — models are an
-excluded topic (docs/stubs/TODO-models.md); omitting `model-name` makes the
+`model-name: "shotgun"` resolves to `my_pack:models/shotgun.obj` — models are
+covered in 14-models.md; omitting `model-name` makes the
 engine generate a default model.
 
 Real game pack, `my_pack:spawn_nepis` (spawn-egg style item driven by a script):
@@ -48,13 +56,13 @@ Real game pack, `my_pack:spawn_nepis` (spawn-egg style item driven by a script):
 
 ### Visual
 
-| Property     | Type   | Meaning                                                                 |
-| ------------ | ------ | ----------------------------------------------------------------------- |
-| `icon-type`  | string | `sprite` (2D icon) \| `block` (3D block preview). `none` exists only for `core:empty` and may be removed — AVOID using it. `[DOC]` |
-| `icon`       | string | For `sprite`: `atlas:texture` — e.g. `items:shotgun`, `blocks:dirt`. For `block`: block ID — e.g. `base:wood`. `[VERIFIED]` |
+| Property | Type | Meaning |
+| --- | --- | --- |
+| `icon-type` | string | `sprite` (2D icon) \| `block` (3D block preview). `none` exists only for `core:empty` and may be removed — AVOID using it. `[DOC]` |
+| `icon` | string | For `sprite`: `atlas:texture` — e.g. `items:shotgun`, `blocks:dirt`. For `block`: block ID — e.g. `base:wood`. `[VERIFIED]` |
 | `model-name` | string | Item model name; default `packid:itemname`; auto-generated when absent. `[DOC]` |
-| `caption`    | string | Display name in inventory. Supports inline `md` markup. `[DOC]` Default caption derives from the ID (underscores → spaces). `[OBSERVED]` |
-| `description`| string | Inventory tooltip. Supports inline `md` markup. `[DOC]` |
+| `caption` | string | Display name in inventory. Supports inline `md` markup. `[DOC]` Default caption derives from the ID (underscores → spaces). `[OBSERVED]` |
+| `description` | string | Inventory tooltip. Supports inline `md` markup. `[DOC]` |
 
 The two automatic atlases are `blocks` (from `textures/blocks/*.png`) and
 `items` (from `textures/items/*.png`) — same for every pack; your PNGs simply
@@ -62,14 +70,14 @@ join them by file name. See 05-textures-and-assets.md.
 
 ### Behavior
 
-| Property        | Type    | Meaning                                                                 |
-| --------------- | ------- | ----------------------------------------------------------------------- |
-| `placing-block` | string  | Block ID placed on right-click. This is what generated block-items use internally. `[DOC]` |
-| `emission`      | [R,G,B] | Light emitted while held in hand, each channel 0..15. `[DOC]`            |
-| `stack-size`    | int     | Max per inventory slot. Default 64. Shotgun uses 1. `[VERIFIED]`         |
-| `uses`          | int     | Durability/consumable counter, driven via `inventory.use()` from Lua. Shown in inventory UI. `[VERIFIED]` |
-| `uses-display`  | string  | `none` \| `number` \| `relation` \| `vbar` (default `vbar`). `[DOC]`     |
-| `script-name`   | string  | Script file (without `pack:scripts/` and extension) with the item's event handlers. Default: the item's own name. `[DOC]` |
+| Property | Type | Meaning |
+| --- | --- | --- |
+| `placing-block` | string | Block ID placed on right-click. This is what generated block-items use internally. `[DOC]` |
+| `emission` | [R,G,B] | Light emitted while held in hand, each channel 0..15. `[DOC]` |
+| `stack-size` | int | Max per inventory slot. Default 64. Shotgun uses 1. `[VERIFIED]` |
+| `uses` | int | Durability/consumable counter, driven via `inventory.use()` from Lua. Shown in inventory UI. `[VERIFIED]` |
+| `uses-display` | string | `none` \| `number` \| `relation` \| `vbar` (default `vbar`). `[DOC]` |
+| `script-name` | string | Script file (without `pack:scripts/` and extension) with the item's event handlers. Default: the item's own name. `[DOC]` |
 
 ### Tags
 

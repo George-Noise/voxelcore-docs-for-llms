@@ -1,5 +1,13 @@
 # 06. Walkthrough: Build a Complete Minimal Pack
 
+> **MANDATORY PREREQUISITES — DO NOT SKIP.** This file assumes you have read
+> [01-engine-overview.md](01-engine-overview.md) AND
+> [08-pitfalls.md](08-pitfalls.md). 01 defines the ID rules, reserved names
+> and trust labels this file relies on; 08 lists the real failure modes
+> behind every DO/AVOID note. Skipping either is the most common reason
+> models generate broken packs from this guide. If you received only this
+> file, fetch and read both before writing any code.
+
 Goal: a working pack `my_first_pack` that adds:
 - block `my_first_pack:ruby_ore` — a stone-like ore cube,
 - block `my_first_pack:ruby_lamp` — a glowing cube,

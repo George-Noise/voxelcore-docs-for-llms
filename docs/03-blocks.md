@@ -1,5 +1,13 @@
 # 03. Blocks Reference
 
+> **MANDATORY PREREQUISITES — DO NOT SKIP.** This file assumes you have read
+> [01-engine-overview.md](01-engine-overview.md) AND
+> [08-pitfalls.md](08-pitfalls.md). 01 defines the ID rules, reserved names
+> and trust labels this file relies on; 08 lists the real failure modes
+> behind every DO/AVOID note. Skipping either is the most common reason
+> models generate broken packs from this guide. If you received only this
+> file, fetch and read both before writing any code.
+
 Block definitions are JSON files in `blocks/` of the pack. The file name defines
 the content name: `blocks/dirt.json` in pack `base` becomes `base:dirt`.
 `[VERIFIED]` ID rules: see 01-engine-overview.md.
@@ -44,14 +52,14 @@ Texture NAME only: no path, no `.png` extension. The PNG must be in the pack's
 
 Array of exactly 6 texture names, order:
 
-| Index | Face        | Direction |
-| ----- | ----------- | --------- |
-| 0     | west        | −X        |
-| 1     | east        | +X        |
-| 2     | bottom      | −Y        |
-| 3     | top         | +Y        |
-| 4     | north       | −Z        |
-| 5     | south       | +Z        |
+| Index | Face | Direction |
+| --- | --- | --- |
+| 0 | west | −X |
+| 1 | east | +X |
+| 2 | bottom | −Y |
+| 3 | top | +Y |
+| 4 | north | −Z |
+| 5 | south | +Z |
 
 `[VERIFIED]` against engine face constants (`FACE_MX, FACE_PX, FACE_MY, FACE_PY,
 FACE_MZ, FACE_PZ` in `src/voxels/Block.hpp`) and the stock `grass_block.json`.
@@ -69,22 +77,46 @@ atlas reference (`atlas:name`). Not documented upstream. `[OBSERVED]`
 
 ### `model` — built-in model type
 
-| Value    | Behavior                                                              |
-| -------- | --------------------------------------------------------------------- |
-| `block`  | Default full cube (default for all blocks)                             |
-| `none`   | Invisible block (air-like)                                             |
-| `X`      | Two crossed sprites — grass/flowers style (see `flower.json` example)  |
-| `aabb`   | Mesh matches the block hitbox (pipes, torch, doors, lamps)             |
-| `custom` | Requires `model-name` (custom model file) — OUT OF SCOPE, see stubs    |
+| Value | Behavior |
+| --- | --- |
+| `block` | Default full cube (default for all blocks) |
+| `none` | Invisible block (air-like) |
+| `X` | Two crossed sprites — grass/flowers style (see `flower.json` example) |
+| `aabb` | Mesh matches the block hitbox (pipes, torch, doors, lamps) |
+| `custom` | The ONLY value that makes the engine read `model-name` — OUT OF SCOPE, see stubs |
 
 `[VERIFIED]`
 
 ### `model-name` — custom model file
 
-Value is a model name without the `<pack>:models/` prefix and without extension.
-Custom models are an excluded topic (docs/stubs/TODO-models.md). Textures used
-inside custom models must live in the `blocks` atlas and be referenced as
-`blocks:name`. `[DOC]`
+`model-name` is read ONLY and ONLY when `"model": "custom"` is set. With any
+other `model` value (`block`, `none`, `X`, `aabb`) or with no `model` field at
+all, `model-name` is silently ignored — do not add it "just in case".
+`[VERIFIED: user first-hand]`
+
+Real example — `content/vd_belt_system/blocks/destroyer_belt.json` from
+[wooden_meat_game](https://github.com/George-Noise/wooden_meat_game), verbatim:
+
+```json
+{
+    "caption": "Destroyer Belt",
+    "texture": "box",
+    "model": "custom",
+    "model-name": "destroyer_belt",
+    "rotation": "pane",
+    "hitbox": [0, 0, 0, 1, 0.5, 1],
+    "light-passing": true,
+    "sky-light-passing": true,
+    "material": "base:metal"
+}
+```
+
+The value is a model name without the `<pack>:models/` prefix and without
+extension (in the example above the model file is
+`vd_belt_system/models/destroyer_belt.*`). Custom models are covered in
+14-models.md. Textures inside custom models resolve as `$0`..`$5` (the
+block's texture-faces), `blocks:name` (blocks atlas) or bare names
+(standalone `textures/<name>` files). `[DOC]`
 
 ### `draw-group` — integer
 
@@ -118,13 +150,13 @@ Vertex ambient occlusion toggle. `[VERIFIED]`
 
 ### `rotation` — placement rotation profile
 
-| Value     | For blocks like            |
-| --------- | -------------------------- |
-| `none`    | default; no rotation       |
-| `pipe`    | logs, pipes, torches (axis alignment) |
-| `pane`    | panels, doors, signs (flat alignment) |
-| `stairs`  | stairs (`pane` + upside-down variants) |
-| `ladder`  | ladders (`pipe` on vertical + `pane` on horizontal surfaces) |
+| Value | For blocks like |
+| --- | --- |
+| `none` | default; no rotation |
+| `pipe` | logs, pipes, torches (axis alignment) |
+| `pane` | panels, doors, signs (flat alignment) |
+| `stairs` | stairs (`pane` + upside-down variants) |
+| `ladder` | ladders (`pipe` on vertical + `pane` on horizontal surfaces) |
 
 `[DOC]` Real usage: `wood.json` and `torch.json` use `"rotation": "pipe"`,
 `wooden_door.json` uses `"pane"`. `[OBSERVED]`
@@ -340,6 +372,8 @@ equivalents and check the stock pack again when the engine updates.
 - DO use `"model": "X"` + `obstacle:false` + `replaceable:true` + `grounded:true` + `draw-group:1` for plants.
 - DO reference block-derived items with the `.item` suffix in loot/pick properties.
 - AVOID combining `texture` with `texture-faces` in one block.
+- AVOID adding `model-name` to a block whose `model` is not `"custom"` — the
+  field is ignored there and only misleads readers.
 - AVOID `translucent` unless you need alpha blending (prefer `draw-group` + `light-passing`).
 - AVOID inventing property names; everything allowed is listed above or in upstream docs.
 - AVOID depending on `[OBSERVED]` properties without a fallback plan.

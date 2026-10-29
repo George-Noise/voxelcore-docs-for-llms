@@ -5,22 +5,29 @@
 > folder layout, block/item JSON formats, textures, preload and config files,
 > with a step-by-step minimal pack walkthrough and annotated real-world
 > examples. Written in imperative DO/AVOID style with trust labels
-> (VERIFIED / DOC / OBSERVED). Scope: declarative content plus HUD/UI basics —
-> animations, sounds, models, entities, projects and worldgen are stub-only.
+> (VERIFIED / DOC / OBSERVED). Scope: declarative content, HUD/UI basics,
+> entity basics, animations (VCA), sounds & audio and models (VCM/OBJ) —
+> projects and worldgen are stub-only.
 
 Start here for the reader contract, trust labels and usage patterns:
 
 - [README](README.md): how to feed this repo to chat LLMs and coding agents
 
-Core reference:
+Core reference (01 and 08 are MANDATORY companions to every other file — read
+both even if you only need 03 or 09; models that skip them produce broken packs):
 
-- [01 Engine Overview](docs/01-engine-overview.md): terminology, namespaced IDs, ID rules, reserved names, how content loads
+- [01 Engine Overview](docs/01-engine-overview.md): MANDATORY prerequisite — terminology, namespaced IDs, ID rules, reserved names, how content loads
 - [02 Pack Structure](docs/02-pack-structure.md): package.json manifest, dependencies, content sources, folder layout, config TOML files, enabling packs
 - [03 Blocks Reference](docs/03-blocks.md): every documented block property, texture-faces face order, real annotated stock-pack examples
 - [04 Items Reference](docs/04-items.md): item properties, icons, generated block items, tags, script boundary
 - [05 Textures and Assets](docs/05-textures-and-assets.md): blocks/items atlases, icon.png, preload.json, block materials, localization
 - [09 HUD and UI Basics](docs/09-hud-and-ui.md): layouts/, scripts/hud.lua, menu pages (menu.page), overlays (hud.show_overlay), image src addressing
-- [08 Pitfalls and Checklist](docs/08-pitfalls.md): fatal mistakes, wrong assumptions, pre-flight checklist, debugging hints
+- [10 Entities](docs/10-entities.md): entity JSON definitions (full field table), skeletons, spawn-egg items, entities.spawn, minimal custom components
+- [11 Animations](docs/11-animation.md): VCA format (directives, curves, configure), preload naming rules, animation.play, core:animator, verified units and duration semantics
+- [12 Sounds and Audio](docs/12-sounds.md): preload entries and the variants pattern, play_sound/play_stream naming rules, channels, speaker control, stream addressing, material sounds
+- [13 Creating Audio at Runtime](docs/13-sound-creation.md): PCMStream (feed/share/create_sound), sample format rules, share vs create_sound, mic input pointer
+- [14 Models](docs/14-models.md): models/ folder and name resolution, VCM primitives and bones, OBJ subset (no MTL), block/item custom models, entity skeleton binding
+- [08 Pitfalls and Checklist](docs/08-pitfalls.md): MANDATORY prerequisite — fatal mistakes, wrong assumptions, pre-flight checklist, debugging hints
 
 Applied:
 
@@ -29,10 +36,6 @@ Applied:
 
 Out-of-scope stubs (do not guess these topics — pointers to authoritative sources inside):
 
-- [TODO Animations](docs/stubs/TODO-animations.md)
-- [TODO Sounds](docs/stubs/TODO-sounds.md)
-- [TODO Models](docs/stubs/TODO-models.md)
-- [TODO Entities](docs/stubs/TODO-entities.md)
 - [TODO Projects and World Generators](docs/stubs/TODO-projects-worldgen.md)
 
 Full text for pasting into chats:

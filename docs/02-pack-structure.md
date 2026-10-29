@@ -1,5 +1,13 @@
 # 02. Pack Structure and Manifest
 
+> **MANDATORY PREREQUISITES — DO NOT SKIP.** This file assumes you have read
+> [01-engine-overview.md](01-engine-overview.md) AND
+> [08-pitfalls.md](08-pitfalls.md). 01 defines the ID rules, reserved names
+> and trust labels this file relies on; 08 lists the real failure modes
+> behind every DO/AVOID note. Skipping either is the most common reason
+> models generate broken packs from this guide. If you received only this
+> file, fetch and read both before writing any code.
+
 This document defines where packs live, what `package.json` must contain, and
 which auxiliary files a pack may have.
 
@@ -9,12 +17,12 @@ The engine discovers packs in **content sources**, scanned in priority order
 (highest first). If the same pack ID exists in several sources, the
 highest-priority one wins and the rest are ignored. `[VERIFIED]`
 
-| Priority | Source           | Path                                        |
-| -------- | ---------------- | ------------------------------------------- |
-| 1        | `world:content`  | `<world folder>/content/`                   |
-| 2        | `user:content`   | `$HOME/.voxeng/content/`                    |
-| 3        | `project:content`| `<project folder>/content/` (project mode)  |
-| 4        | `res:content`    | `<engine>/res/content/` (built-in packs)    |
+| Priority | Source | Path |
+| --- | --- | --- |
+| 1 | `world:content` | `<world folder>/content/` |
+| 2 | `user:content` | `$HOME/.voxeng/content/` |
+| 3 | `project:content` | `<project folder>/content/` (project mode) |
+| 4 | `res:content` | `<engine>/res/content/` (built-in packs) |
 
 Practical guidance:
 
@@ -49,15 +57,15 @@ name works.
 }
 ```
 
-| Field          | Required | Format / notes                                                |
-| -------------- | -------- | ------------------------------------------------------------- |
-| `id`           | yes      | Pack ID, rules in 01-engine-overview.md                        |
-| `title`        | yes*     | Display name in the content menu                               |
-| `version`      | yes*     | `major.minor[.patch]`, e.g. `"1.0"`, `"0.32"`                  |
-| `creator`      | no       | Author name; OR use an array field `creators` instead `[DOC]`  |
-| `description`  | no       | Short free-form text                                           |
-| `dependencies` | no       | Array of dependency strings (see below)                        |
-| `license`      | no       | Observed in real packs (`"license": "MPL-2.0"`); engine ignores unknown fields `[OBSERVED]` |
+| Field | Required | Format / notes |
+| --- | --- | --- |
+| `id` | yes | Pack ID, rules in 01-engine-overview.md |
+| `title` | yes* | Display name in the content menu |
+| `version` | yes* | `major.minor[.patch]`, e.g. `"1.0"`, `"0.32"` |
+| `creator` | no | Author name; OR use an array field `creators` instead `[DOC]` |
+| `description` | no | Short free-form text |
+| `dependencies` | no | Array of dependency strings (see below) |
+| `license` | no | Observed in real packs (`"license": "MPL-2.0"`); engine ignores unknown fields `[OBSERVED]` |
 
 \* Official docs show `title`/`version` in every example; packs without them are
 unknown territory. DO always include `id`, `title`, `version`.
@@ -66,11 +74,11 @@ unknown territory. DO always include `id`, `title`, `version`.
 
 Each dependency string is `[prefix]pack_id[@version_spec]`:
 
-| Prefix | Meaning      | Behavior                                                        |
-| ------ | ------------ | --------------------------------------------------------------- |
-| `!` or none | required | Pack fails to load without it (this is the default) `[DOC]`     |
-| `?`    | optional     | Loaded if present, ignored otherwise                            |
-| `~`    | weak         | Order-only / best-effort (documented as "weak dependency")      |
+| Prefix | Meaning | Behavior |
+| --- | --- | --- |
+| `!` or none | required | Pack fails to load without it (this is the default) `[DOC]` |
+| `?` | optional | Loaded if present, ignored otherwise |
+| `~` | weak | Order-only / best-effort (documented as "weak dependency") |
 
 Version spec operators exist (e.g. `>=1.0`, `*` = any, which is the default).
 Only `>=` is shown by official docs; AVOID inventing other operators (`<`, `=`)
@@ -113,13 +121,13 @@ my_pack/
 ├── preload.json            # IN SCOPE  — 05-textures-and-assets.md
 ├── config/                 # partially in scope — see below
 ├── content.json            # AUTO-GENERATED. NEVER hand-edit, NEVER create.
-├── entities/               # OUT OF SCOPE (stub)
-├── skeletons/              # OUT OF SCOPE (stub)
+├── entities/               # IN SCOPE  — 10-entities.md
+├── skeletons/              # IN SCOPE  — 10-entities.md (basics)
 ├── models/                 # OUT OF SCOPE (stub)
-├── sounds/                 # OUT OF SCOPE (stub)
+├── sounds/                 # IN SCOPE — 12-sounds.md
 ├── shaders/                # OUT OF SCOPE
 ├── fonts/                  # OUT OF SCOPE
-├── animation/              # OUT OF SCOPE (stub) — singular spelling, NOT "animations"
+├── animation/              # IN SCOPE — 11-animation.md (singular, NOT "animations")
 ├── layouts/                # IN SCOPE (HUD/UI basics) — 09-hud-and-ui.md
 ├── generators/             # OUT OF SCOPE (stub: worldgen)
 ├── scripts/                # OUT OF SCOPE (Lua) — EXCEPT scripts/hud.lua (09)

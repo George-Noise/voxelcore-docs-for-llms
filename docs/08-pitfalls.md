@@ -1,5 +1,11 @@
 # 08. Pitfalls and Pre-flight Checklist
 
+> **MANDATORY PAIR — DO NOT SKIP.** This file assumes you have read
+> [01-engine-overview.md](01-engine-overview.md) (ID rules, reserved names,
+> trust labels). Every other document in this guide also assumes you have
+> read THIS file. If you received only this file, fetch and read 01 before
+> writing any code.
+
 Every entry below is a real failure mode — either documented upstream, thrown
 by the engine, or observed in real packs. Treat each AVOID as a hard rule.
 
@@ -62,6 +68,7 @@ by the engine, or observed in real packs. Treat each AVOID as a hard rule.
 18. **Spelling the animation folder or preload key `animations`.** The engine
     constant is `animation` (singular): pack folder `animation/`, `preload.json`
     key `"animation"`. An upstream quirk you must reproduce. `[VERIFIED]`
+    The full animation reference is 11-animation.md.
 
 ## JSON hygiene
 

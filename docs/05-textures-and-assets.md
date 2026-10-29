@@ -1,5 +1,13 @@
 # 05. Textures, Atlases, preload.json, Materials, Localization
 
+> **MANDATORY PREREQUISITES — DO NOT SKIP.** This file assumes you have read
+> [01-engine-overview.md](01-engine-overview.md) AND
+> [08-pitfalls.md](08-pitfalls.md). 01 defines the ID rules, reserved names
+> and trust labels this file relies on; 08 lists the real failure modes
+> behind every DO/AVOID note. Skipping either is the most common reason
+> models generate broken packs from this guide. If you received only this
+> file, fetch and read both before writing any code.
+
 This document covers the asset side of the IN-SCOPE topics: block/item textures,
 the pack icon, asset preloading, block materials, and caption localization.
 
@@ -8,10 +16,10 @@ the pack icon, asset preloading, block materials, and caption localization.
 Two global texture atlases exist and every pack contributes to them
 automatically: `[VERIFIED]`
 
-| Atlas    | Fed by                       | Used for                          |
-| -------- | ---------------------------- | --------------------------------- |
+| Atlas | Fed by | Used for |
+| --- | --- | --- |
 | `blocks` | `<pack>/textures/blocks/*.png` | block `texture`/`texture-faces`, block-model textures |
-| `items`  | `<pack>/textures/items/*.png`  | item sprite icons (`icon: "items:x"`) |
+| `items` | `<pack>/textures/items/*.png` | item sprite icons (`icon: "items:x"`) |
 
 Rules:
 
@@ -48,6 +56,8 @@ asset names/paths (no extensions). `[VERIFIED]`
 
 Categories: `animation`, `fonts`, `models`, `shaders`, `skeletons`, `sounds`,
 `textures`. Extras seen in real packs: `atlases` (see above). `[OBSERVED]`
+The `animation` category (VCA tracks) has its own document:
+11-animation.md.
 
 ```json
 {
@@ -92,9 +102,10 @@ A *material* bundles interaction sounds for blocks. Blocks reference it by
 }
 ```
 
-- Sound values are names resolved against loaded sounds (sounds themselves are
-  an EXCLUDED topic — docs/stubs/TODO-sounds.md; the stock sounds live in the
-  `base` pack).
+- Sound values are names resolved against loaded sounds — see 12-sounds.md.
+  Material sounds (`steps-sound` etc.) are requested by the engine
+  automatically and need NO `preload.json` entry; if `hit-sound` is omitted
+  it falls back to `steps-sound`. The stock sounds live in the `base` pack.
 - The stock `config/defaults.toml` sets `block-material = "base:stone"` as the
   game-wide fallback. `[OBSERVED]`
 - DO reuse existing `base:*` materials (`base:stone`, `base:wood`, `base:ground`,
